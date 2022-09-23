@@ -1,18 +1,19 @@
 ! +-------------------------------------------+
 ! | Author: Jose Antonio Quinonero Gris       |
-! | Creation date: Friday 12:24:17 23-09-2022 |
+! | Creation date: Friday 21:46:24 23-09-2022 |
 ! +-------------------------------------------+
 
-program cholesky
+program cholesky_random
     !
-    ! A program to construct a nxn real symetric positive definite matrix and
-    ! decompose it with Cholesky method
+    ! A program to construct a random nxn real symetric positive definite
+    ! matrix and decompose it with Cholesky method
     !
     implicit none
     !
     ! Variable definition
     !
     integer :: i, J, k
+    integer :: randmin, randmax
     integer :: filA, colB
     integer :: n
     real(kind=8), dimension(:,:), allocatable :: M, L
@@ -35,22 +36,29 @@ program cholesky
     write(*,*) '+__________________+'
     write(*,*)
     !
-    ! Read and print dimension input
+    ! Read input dimensions, n
     !
     read(10,*) ! Blank line
     read(10,*) n
     write(*,*) 'The dimension of the matrix is'
     write(*,*) 'n =', n
     write(*,*)
-    !
-    ! Read and print vector input
-    !
     read(10,*)
+    !
+    ! Generate random matrix with numbers between randmin and randmax
+    !
+    randmin = 0
+    randmax = 10
     allocate(invec(n))
+    call random_number(invec)
     write(*,10)
-    write(*,*) 'Input vector'
+    write(*,*) 'Random-generated vector'
     do i = 1, n
-        read(10,*) invec(i)
+        !
+        ! Make the numbers in u integers (j), between n and m, doing:
+        ! j = n + FLOOR((m+1-n)*u)
+        !
+        invec(i) = randmin + FLOOR((randmax+1-randmin)*invec(i))
         write(*,'(1000f6.1)') invec(i)
     end do
     !
@@ -155,4 +163,4 @@ program cholesky
     write(*,10)
     !
     stop
-endprogram cholesky
+endprogram cholesky_random
