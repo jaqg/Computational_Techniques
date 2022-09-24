@@ -21,9 +21,6 @@ program exercise2
     !
     open(unit=10, file="in-exercise2.dat")
     !
-    ! Formats
-    !
-    !
     ! === START OF THE PROGRAM ===
     !
     write(*,*) '+-------------------+'
