@@ -17,16 +17,20 @@ program exercise1
     integer :: n
     real(kind=8) :: pi, exac, suma, res, err
     !
+    ! Files
+    !
+    open(unit=10, file="out-exercise_1.dat")
+    !
     ! Formats
     !
     10 format(' ----------------------------------------')
     !
     ! === START OF THE PROGRAM ===
     !
-    write(*,*) '+-------------------+'
-    write(*,*) '| Program exercise1 |'
-    write(*,*) '+-------------------+'
-    write(*,*)
+    write(10,*) '+-------------------+'
+    write(10,*) '| Program exercise1 |'
+    write(10,*) '+-------------------+'
+    write(10,*)
     !
     ! Define constants
     !
@@ -35,9 +39,9 @@ program exercise1
     !
     ! Write first row
     !
-    write(*,10)
-    write(*,'(9x, "n", 8x, "1/n**2", 10x, "error")')
-    write(*,10)
+    write(10,10)
+    write(10,'(9x, "n", 8x, "1/n**2", 10x, "error")')
+    write(10,10)
     !
     ! Main loop
     !
@@ -46,19 +50,19 @@ program exercise1
         res = 1.0_8/dble(n)**2
         suma = suma + res
         err = exac - suma
-        write(*,'(i10.1, 2f15.6)') n, suma, err
+        write(10,'(i10.1, 2f15.6)') n, suma, err
         if (err<0.0001) exit
     end do loop1
     !
     ! Write results
     !
-    write(*,10)
-    write(*,*)
-    write(*,'(1x, "pi**2/6 =", f9.6)') exac
-    write(*,*) 'The number of terms included in order the'
-    write(*,*) 'error to be less than 0.0001 is:'
-    write(*,'(1x, "n =", i10.1)') n
-    write(*,*)
+    write(10,10)
+    write(10,*)
+    write(10,'(1x, "pi**2/6 =", f9.6)') exac
+    write(10,*) 'The number of terms included in order the'
+    write(10,*) 'error to be less than 0.0001 is:'
+    write(10,'(1x, "n =", i10.1)') n
+    write(10,*)
     !
     stop
 endprogram exercise1
