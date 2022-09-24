@@ -7,7 +7,7 @@ program exercise1
     !
     ! Write a program to calculate the sum of the squared inverse (1/n2) for
     ! the n first natural numbers. Check by increasing n that the sum
-    ! converges to π2/6. How many terms must be included in order the error
+    ! converges to pi**2/6. How many terms must be included in order the error
     ! to be less than 0.0001?
     !
     ! Variable definition
