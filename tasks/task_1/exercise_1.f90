@@ -33,9 +33,13 @@ program exercise1
     pi = 4.0_8 * datan(1.0_8)
     exac = pi**2/6.0_8
     !
+    ! Write first row
+    !
     write(*,10)
     write(*,'(9x, "n", 8x, "1/n**2", 10x, "error")')
     write(*,10)
+    !
+    ! Main loop
     !
     suma = 0
     loop1: do n = 1, 1000000
@@ -45,6 +49,8 @@ program exercise1
         write(*,'(i10.1, 2f15.6)') n, suma, err
         if (err<0.0001) exit
     end do loop1
+    !
+    ! Write results
     !
     write(*,10)
     write(*,*)
