@@ -10,9 +10,6 @@ program exercise1
     ! converges to π2/6. How many terms must be included in order the error
     ! to be less than 0.0001?
     !
-    ! IMPLICIT REAL*8(A-H,O-Z)
-    ! IMPLICIT INTEGER(I-N)
-    !
     ! Variable definition
     !
     implicit none
