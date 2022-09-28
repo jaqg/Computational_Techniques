@@ -116,7 +116,7 @@ program cholesky
             loopk: do k = 1, n
                 M(i,k) = M(i,k) - Lvec(i) * Lvec(k)
             end do loopk
-            write(*,'(1000f6.1)') ( M(i,k), k=1, n )
+            write(*,'(1000f6.1)') M(i,:)
         end do loopi2
         write(*,20)
         write(*,*)
@@ -150,7 +150,7 @@ program cholesky
     write(*,10)
     write(*,*) 'Matrix L'
     do i=1, n
-        write(*,'(1000f6.1)') ( L(i,j), j=1,n )
+        write(*,'(1000f6.1)') L(i,:)
     end do
     write(*,10)
     !

@@ -1,6 +1,8 @@
 # Archivos especificos #
 ########################
+TC_Fortran_S1.pdf
 TC_Fortran_S2.pdf
+TC_Fortran_S3.pdf
 cholesky
 cholesky_random
 exercise1
@@ -13,6 +15,7 @@ exercise4_3
 exercise4_3.f90
 exercise4_4
 exercise4_4.f90
+exercise10
 
 # Compiled source #
 ###################

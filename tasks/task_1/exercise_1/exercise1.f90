@@ -58,11 +58,15 @@ program exercise1
     !
     write(10,10)
     write(10,*)
-    write(10,'(1x, "pi**2/6 =", f9.6)') exac
+    write(10,'(1x, a, f9.6)') "pi**2/6 =", exac
     write(10,*) 'The number of terms included in order the'
     write(10,*) 'error to be less than 0.0001 is:'
-    write(10,'(1x, "n =", i10.1)') n
+    write(10,'(1x, a, i10.1)') "n =", n
     write(10,*)
+    !
+    ! Close output file
+    !
+    close(10)
     !
     write(*,*) 'Results stored in file "out-exercise1.dat"'
     !

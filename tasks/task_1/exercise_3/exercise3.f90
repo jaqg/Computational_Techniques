@@ -25,13 +25,14 @@ program exercise3
     ! Files
     !
     open(unit=10, file="in-exercise3.dat")
+    open(unit=11, file="out-exercise3.dat")
     !
     ! === START OF THE PROGRAM ===
     !
-    write(*,*) '+-------------------+'
-    write(*,*) '| Program exercise3 |'
-    write(*,*) '+-------------------+'
-    write(*,*)
+    write(11,*) '+-------------------+'
+    write(11,*) '| Program exercise3 |'
+    write(11,*) '+-------------------+'
+    write(11,*)
     !
     ! Read input
     !
@@ -52,24 +53,24 @@ program exercise3
     !
     ! Print input matrices
     !
-    write(*,*) 'The input matrices are:'
-    write(*,*)
-    write(*,*) 'A ='
+    write(11,*) 'The input matrices are:'
+    write(11,*)
+    write(11,*) 'A ='
     do i = 1, n1
-        write(*,'(10000f6.1)') A(i,:)
+        write(11,'(10000f6.1)') A(i,:)
     end do
-    write(*,*)
-    write(*,*) 'B ='
+    write(11,*)
+    write(11,*) 'B ='
     do i = 1, n2
-        write(*,'(10000f6.1)') B(i,:)
+        write(11,'(10000f6.1)') B(i,:)
     end do
-    write(*,*)
+    write(11,*)
     !
     ! Check if matrices can actually be multiplied
     !
     if (n1 /= m2) then
-        write(*,*) "The matrices can't be multiplied."
-        write(*,*) 'Check the dimension of the matrices.'
+        write(11,*) "The matrices can't be multiplied."
+        write(11,*) 'Check the dimension of the matrices.'
     else
         n = n1
     end if
@@ -90,13 +91,19 @@ program exercise3
     !
     ! Print result matrix C
     !
-    write(*,*) 'The result matrix C = AB is:'
-    write(*,*)
-    write(*,*) 'C ='
+    write(11,*) 'The result matrix C = AB is:'
+    write(11,*)
+    write(11,*) 'C ='
     do i = 1, n
-        write(*,'(1000f10.2)') C(i,:)
+        write(11,'(1000f10.2)') C(i,:)
     end do
-    write(*,*)
+    write(11,*)
+    !
+    ! Close output file
+    !
+    close(11)
+    !
+    write(*,*) 'Results writen to file "out-exercise3.dat"'
     !
     stop
 endprogram exercise3
