@@ -1,0 +1,182 @@
+! +--------------------------------------------+
+! | Author: Jose Antonio Quinonero Gris        |
+! | Creation date: Tuesday 18:19:06 25-10-2022 |
+! +--------------------------------------------+
+
+program final_project
+    !
+    ! Final project
+    !
+    ! Variable definition
+    !
+    implicit none
+    !
+    integer(kind=8) :: i, ierr
+    integer(kind=8) :: n
+    integer(kind=8), dimension(:), allocatable :: prey, predator
+    real(kind=8) :: h, t, t0, tf
+    real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
+    character(len=80) :: themodel
+    !
+    ! Interface
+    !
+    ! abstract interface
+    !     function models(a, b, x, y) result(res)
+    !         real(kind=8), intent(in) :: a, b
+    !         integer(kind=8), intent(in) :: x, y
+    !         integer(kind=8) :: res
+    !     end function models
+    ! end interface
+    !
+    ! procedure(models), pointer :: model => null()
+    integer(kind=8) :: model
+    procedure(), pointer :: model => null()
+    ! integer(kind=8), external :: LV_simple, LV_logistic
+    integer(kind=8), external :: LV, LV_simple
+    !
+    ! Files
+    !
+    open(unit=10, file="input.dat", status='old')
+    open(unit=11, file="output.dat")
+    !
+    ! Formats
+    !
+    999 format('------------------------------')
+    !
+    ! === START OF THE PROGRAM ===
+    !
+    write(*,*) '+-----------------------+'
+    write(*,*) '| Program final_project |'
+    write(*,*) '+-----------------------+'
+    write(*,*)
+    !
+    ! --- Read input ---
+    !
+    !
+    ! Model used
+    !
+    read(10,*)
+    read(10,*) themodel
+    themodel = trim(themodel)
+    !
+    ! Time step (h)
+    !
+    read(10,*)
+    read(10,*) h
+    !
+    ! Time of the simulation
+    !
+    read(10,*)
+    read(10,*) tf
+    !
+    ! Number of (time) steps
+    !
+    t0 = 0.0_8
+    !
+    n = int( (tf - t0)/h )
+    write(*,*) 'n =', n
+    write(*,*)
+    !
+    ! Allocate arrays
+    !
+    allocate(prey(n+1), stat=ierr)
+    if (ierr .ne. 0) stop 'main.f90: Error in allocation of prey'
+    !
+    allocate(predator(n+1), stat=ierr)
+    if (ierr .ne. 0) stop 'main.f90: Error in allocation of predator'
+    !
+    ! Initial population of PREY (y_0)
+    !
+    read(10,*)
+    read(10,*) prey(1)
+    !
+    ! Initial population of predator (x_0)
+    !
+    read(10,*)
+    read(10,*) predator(1)
+    !
+    ! Constant ALPHA
+    !
+    read(10,*)
+    read(10,*) alpha
+    !
+    ! Constant ALPHA PRIME
+    !
+    read(10,*)
+    read(10,*) alphaprime
+    !
+    ! Constant BETA
+    !
+    read(10,*)
+    read(10,*) beta
+    !
+    ! Constant KAPPA
+    !
+    read(10,*)
+    read(10,*) kappa
+    !
+    ! Constant KAPPA PRIME
+    !
+    read(10,*)
+    read(10,*) kappaprime
+    !
+    ! Constant LAMBDA
+    !
+    read(10,*)
+    read(10,*) lambda
+    !
+    ! Print value of constants
+    !
+    write(*,*) 'alpha =', alpha
+    write(*,*) 'alphaprime =', alphaprime
+    write(*,*) 'beta =', beta
+    write(*,*) 'kappa =', kappa
+    write(*,*) 'kappaprime =', kappaprime
+    write(*,*) 'lambda =', lambda
+    write(*,*)
+    !
+    ! if (themodel == "Simple" .or. themodel == "simple") then
+    !     model => LV_simple
+    ! elseif (themodel == "Logistic" .or. themodel == "logistic") then
+    !     model => LV_logistic
+    ! else
+    !     write(*,*) 'main.f90 ERROR: wrong model input'
+    ! end if
+    write(*,*) 'the model is ', themodel
+    ! if (themodel == "Simple" .or. themodel == "simple") then
+    !     alphaprime = 0.0_8
+    !     kappaprime = 0.0_8
+    ! end if
+    !
+    ! Main loop
+    !
+    write(11,999)
+    write(11,'(6x, "t", 7x, "Prey", 3x, "Predator")')
+    write(11,999)
+    !
+    ! model => LV
+    model => LV_simple
+    lt1: do i = 1, n
+        !
+        t = t0 + (dble(i-1) * h)
+        !
+        write(11,'(f10.2, 4x, i0, 4x, i0)') t, prey(i), predator(i)
+        !
+        ! write(*,*) 'model(kappa,-kappaprime,-lambda,prey(i),predator(i)) =', model(kappa,-kappaprime,-lambda,prey(i),predator(i))
+        ! prey(i+1)     = prey(i) + int( &
+        !                 & model(kappa,0.0_8,-lambda,prey(i),predator(i))&
+        !                 & * h )
+        ! predator(i+1) = predator(i) + int( &
+        !                 & model(-alpha,0.0_8,beta,predator(i),prey(i)) &
+        !                 & * h )
+        prey(i+1)     = prey(i) + int( &
+                        & model(kappa,-lambda,prey(i),predator(i))&
+                        & * h )
+        predator(i+1) = predator(i) + int( &
+                        & model(-alpha,beta,predator(i),prey(i)) &
+                        & * h )
+        !
+    end do lt1
+    !
+    stop
+endprogram final_project

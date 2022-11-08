@@ -1,0 +1,61 @@
+! +----------------------------------------------+
+! | Author: Jose Antonio Quinonero Gris          |
+! | Creation date: Wednesday 12:01:03 26-10-2022 |
+! +----------------------------------------------+
+
+function LV(c1, c1prime, c2, p1, p2) result(res)
+    !
+    ! Lotka-Volterra model.
+    !
+    ! Simple model (c1prime = 0):
+    !  dp/dt = c1 * p1 + c2 * p1 * p2
+    !
+    !     Prey (y):
+    !     dy/dt = kappa * y - lambda * x * y
+    !         c1      -> kappa
+    !         c1prime -> 0
+    !         c2      -> -lambda
+    !         p1      -> y
+    !         p2      -> x
+    !
+    !     Predator (x):
+    !      dx/dt = -alpha * x + beta * x * y
+    !         c1      -> -alpha
+    !         c1prime -> 0
+    !         c2      -> beta
+    !         p1      -> x
+    !         p2      -> y
+    !
+    ! Logistic model (c1prime /= 0):
+    !  dp/dt = c1 * p1 + c1prime * p1**2 + c2 * p1 * p2
+    !
+    !     Prey (y):
+    !     dy/dt = kappa * y - kappaprime * y**2 - lambda * x * y
+    !         c1      -> kappa
+    !         c1prime -> -kappaprime
+    !         c2      -> -lambda
+    !         p1      -> y
+    !         p2      -> x
+    !
+    !     Predator (x):
+    !      dx/dt = -alpha * x + alphaprime * x**2 + beta * x * y
+    !         c1      -> -alpha
+    !         c1prime -> alphaprime
+    !         c2      -> beta
+    !         p1      -> x
+    !         p2      -> y
+    !
+    implicit none
+    !
+    real(kind=8), intent(in) :: c1, c1prime, c2
+    integer(kind=8), intent(in) :: p1, p2
+    integer(kind=8) :: res
+    !
+    res = int( &
+        & c1 * dble(p1) + &
+        ! & c1prime * dble(p1)**2 + &
+        & c2 * dble(p1) * dble(p2) &
+        & )
+    !
+    return
+end function LV

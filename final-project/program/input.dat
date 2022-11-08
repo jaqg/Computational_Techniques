@@ -1,0 +1,22 @@
+# Model: Lotka-Volterra "Simple" or "Logistic"
+Logistic
+# Time step (h)
+1.0
+# Time of the simulation
+1000.0
+# Initial population of PREY (y_0)
+1000
+# Initial population of PREDATOR (x_0)
+200
+# Constant ALPHA
+5.0D-3
+# Constant ALPHA PRIME
+2.0D-15
+# Constant BETA
+4.0D-4
+# Constant KAPPA
+3.0D-3
+# Constant KAPPA PRIME
+2.0D-15
+# Constant LAMBDA
+2.0D-4
