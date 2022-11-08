@@ -18,8 +18,9 @@ SUBOBJ=${SUBSRC:.f90=.o}
 MODPATH=modules
 MODSRC=$(shell ls $(MODPATH)/*.f90)
 MODOBJ=${MODSRC:.f90=.o}
+MODMOD=${MODSRC:.f90=.mod}
 #
-SRC=$(SUBSRC) $(MODSRC) $(MAINPROG)
+SRC=$(SUBSRC) $(MODSRC) $(MODMOD) $(MAINPROG)
 OBJ=${SRC:.f90=.o}
 #
 AR=ar rcs
@@ -34,13 +35,18 @@ GRAPHDATA=$(GRAPHDIR)/out-graph.dat
 #
 # Main compilation
 #
-%.o: %.f90
+%.o: %.f90 $(MODMOD)
 	$(FC) $(FFLAGS) -o $@ -c $< -J $(MODPATH)
 #
 # Create main executable
 #
 $(MAINEX): $(OBJ)
 	$(FC) $(FFLAGS) -o $@ $(MODOBJ) $(MAINOBJ) -L./$(LIBPATH) -l$(LIB)
+#
+# Compile modules
+#
+$(MODMOD): $(MODSRC)
+	$(FC) $(FFLAGS) -o $(MODOBJ) -c $< -J $(MODPATH)
 #
 # `make lib` to create/update library
 #

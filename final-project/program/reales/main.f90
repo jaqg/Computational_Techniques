@@ -81,6 +81,8 @@ program final_project
         t(i) = t0 + (dble(i-1) * h)
         !
         call method( predator(i), prey(i), predator(i+1), prey(i+1) )
+        ! call Euler( predator(i), prey(i), predator(i+1), prey(i+1) )
+        ! call modEuler( predator(i), prey(i), predator(i+1), prey(i+1) )
         !
     end do lt1
     !

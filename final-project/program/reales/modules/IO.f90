@@ -8,6 +8,7 @@ module IO
     implicit none
     !
     character(len=80) :: themodel, themethod
+    real(kind=8) :: MEthreshold
     real(kind=8) :: t0, h, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
     real(kind=8), dimension(:), allocatable :: t, prey, predator
@@ -35,6 +36,11 @@ module IO
             read(uf,*)
             read(uf,*) themethod
             themethod = trim(themethod)
+            !
+            ! Threshold of the Modified Euler method (to cut iterating over n)
+            !
+            read(uf,*)
+            read(uf,*) MEthreshold
             !
             ! Initial time (t0)
             !
