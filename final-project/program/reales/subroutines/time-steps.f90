@@ -11,7 +11,7 @@ subroutine time_steps(t0, tf, h, n)
     real(kind=8), intent(in) :: t0, tf, h
     integer(kind=8), intent(out) :: n
     !
-    n = int( (tf - t0)/h )
+    n = int( (tf - t0)/h ) + 1
     !
     return
 end subroutine time_steps

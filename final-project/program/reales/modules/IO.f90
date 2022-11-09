@@ -11,7 +11,8 @@ module IO
     real(kind=8) :: MEthreshold
     real(kind=8) :: t0, h, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
-    real(kind=8), dimension(:), allocatable :: t, prey, predator
+    real(kind=8), dimension(:), allocatable :: t, prey, predator, &
+                                             & preyRK, predatorRk
     !
     contains
         !
@@ -119,8 +120,18 @@ module IO
             allocate(predator(n+1), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of predator'
             !
-            ! prey(1) = prey0
-            ! predator(1) = predator0
+            allocate(preyRK(n+1), stat=ierr)
+            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of preyRK'
+            !
+            allocate(predatorRK(n+1), stat=ierr)
+            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of predatorRK'
+            !
+            ! Initial values
+            !
+            prey(1) = prey0
+            predator(1) = predator0
+            preyRK(1) = prey0
+            predatorRK(1) = predator0
             !
             return
         end subroutine allocate_arrays
@@ -186,7 +197,9 @@ module IO
             !
             lw1: do i = 1, final_n
                 write(uf,'(*(f15.2))') t(i), prey(i), predator(i)
-                write(uf2,'(*(f15.2))') t(i), prey(i), predator(i)
+                ! write(uf2,'(*(f15.2))') t(i), prey(i), predator(i)
+                write(uf2,'(*(f15.2))') t(i), prey(i), predator(i), &
+                                            & preyRK(i), predatorRK(i)
             end do lw1
             !
             close(uf)

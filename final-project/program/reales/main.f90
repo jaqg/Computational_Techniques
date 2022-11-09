@@ -27,7 +27,7 @@ program final_project
     !
     procedure(), pointer :: method => null()
     real(kind=8), external :: LV
-    external :: Euler, modEuler
+    external :: Euler, modEuler, RK4
     !
     !
     ! ========================= START OF THE PROGRAM =========================
@@ -44,8 +44,6 @@ program final_project
     ! Allocate arrays
     !
     call allocate_arrays(n)
-    prey(1) = prey0
-    predator(1) = predator0
     !
     ! Set the pointer 'method' to the chosen method
     !
@@ -55,8 +53,8 @@ program final_project
         method => modEuler
     ! elseif (themethod == "Taylor" .or. themethod == "T") then
     !     method => Taylor
-    ! elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
-    !     method => RK4
+    elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
+        method => RK4
     else
         write(*,*) 'main.f90 ERROR: wrong method input'
     end if
@@ -83,6 +81,7 @@ program final_project
         call method( predator(i), prey(i), predator(i+1), prey(i+1) )
         ! call Euler( predator(i), prey(i), predator(i+1), prey(i+1) )
         ! call modEuler( predator(i), prey(i), predator(i+1), prey(i+1) )
+        call Rk4( predatorRK(i), preyRK(i), predatorRK(i+1), preyRK(i+1) )
         !
     end do lt1
     !
