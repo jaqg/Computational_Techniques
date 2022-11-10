@@ -5,14 +5,51 @@
 
 module IO
     !
+    ! Module to source data to the main program
+    !
     implicit none
+    !
+    !
+    ! The data is stored in the array 'y' of 'nsp' (number of species) columns.
+    ! In this case:
+    !
+    ! y(i,1) -> prey
+    ! y(i,2) -> predator
+    !
+    ! so nsp = 2
+    !
+    integer, parameter :: nsp = 2
+    real(kind=8), dimension(:,:), allocatable :: y, yRk
+    !
+    ! We can write the Lotka-Volterra equations as:
+    !
+    ! dy/dt = f(t,y) = A * y + B * y**2 + C * x * y
+    !
+    ! where A, B, C are parameters (constants). The number of terms (addends)
+    ! is nterms = 3.
+    !
+    integer, parameter :: nterms = 3
+    !
+    ! The parameters are stored in an array 'params' of nterms x nsp dimensions
+    ! as
+    !
+    ! params(i,1) -> params of equation of prey
+    ! params(i,2) -> params of equation of predator
+    !
+    real(kind=8), dimension(:,:), allocatable :: params
+    !
+    ! The time of the simulation is stored in a vector 't' of 'n' items
+    !
+    real(kind=8), dimension(:), allocatable :: t
+    !
+    ! Dummy variables
     !
     character(len=80) :: themodel, themethod
     real(kind=8) :: MEthreshold
     real(kind=8) :: t0, h, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
-    real(kind=8), dimension(:), allocatable :: t, prey, predator, &
-                                             & preyRK, predatorRk
+    !
+    ! Procedures
     !
     contains
         !
@@ -114,27 +151,50 @@ module IO
             allocate(t(n), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of t'
             !
-            allocate(prey(n+1), stat=ierr)
+            allocate(params(nterms,nsp), stat=ierr)
+            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of params'
+            !
+            allocate(y(n+1,nsp), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of prey'
             !
-            allocate(predator(n+1), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of predator'
-            !
-            allocate(preyRK(n+1), stat=ierr)
+            allocate(yRK(n+1,nsp), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of preyRK'
-            !
-            allocate(predatorRK(n+1), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of predatorRK'
-            !
-            ! Initial values
-            !
-            prey(1) = prey0
-            predator(1) = predator0
-            preyRK(1) = prey0
-            predatorRK(1) = predator0
             !
             return
         end subroutine allocate_arrays
+        !
+        subroutine assign_params
+            !
+            ! Subroutine to assign desired parameters/variables for the
+            ! main program
+            !
+            implicit none
+            !
+            ! Parameters (constants) of Lotka-Volterra model:
+            ! kappa, kappaprime, lambda -> prey
+            ! alpha, alphaprime, beta   -> predator
+            !
+            ! If the chosen model is the Simple one, then alphaprime and
+            ! kappaprime must = 0 so the LV logistic model reduces to the
+            ! simple one
+            !
+            if (themodel == "Simple" .or. themodel == "simple") then
+                alphaprime = 0.0_8
+                kappaprime = 0.0_8
+            end if
+            !
+            params(:,1) = (/ kappa, -kappaprime, -lambda /)
+            params(:,2) = (/ -alpha, alphaprime, beta /)
+            !
+            ! Initial values of species
+            !
+            y(1,1)   = prey0
+            y(1,2)   = predator0
+            yRK(1,1) = prey0
+            yRK(1,2) = predator0
+            !
+            return
+        end subroutine assign_params
         !
         subroutine write_output(n,final_n)
             !
@@ -144,7 +204,7 @@ module IO
             !
             integer :: uf, uf2
             integer(kind=8), intent(in) :: n, final_n
-            integer(kind=8) :: i
+            integer(kind=8) :: i, j
             !
             ! Files
             !
@@ -192,14 +252,15 @@ module IO
             write(uf,*)
             write(uf,999)
             write(uf,'(11x, "t", 12x, "Prey", 11x, "Predator")')
+            write(uf2,'(a)') themethod
             write(uf2,'(11x, "t", 12x, "Prey", 11x, "Predator")')
             write(uf,999)
             !
             lw1: do i = 1, final_n
-                write(uf,'(*(f15.2))') t(i), prey(i), predator(i)
-                ! write(uf2,'(*(f15.2))') t(i), prey(i), predator(i)
-                write(uf2,'(*(f15.2))') t(i), prey(i), predator(i), &
-                                            & preyRK(i), predatorRK(i)
+                write(uf,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp )
+                ! write(uf2,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp )
+                write(uf2,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp ), &
+                                            & ( yRK(i,j), j=1,nsp )
             end do lw1
             !
             close(uf)

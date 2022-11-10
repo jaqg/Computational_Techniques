@@ -54,8 +54,8 @@ subroutine modEuler(x0, y0, resx, resy)
         fki = LV(-alpha, alphaprime, beta, xki, yki)
         gki = LV(kappa, -kappaprime, -lambda, yki, xki)
         !
-        ! x_k^{(n+1)} = x_0 + h/2 * ( f(t_0, x_0) + f(t_k, x_k^{(n)}) )
-        ! y_k^{(n+1)} = y_0 + h/2 * ( f(t_0, y_0) + f(t_k, y_k^{(n)}) )
+        ! x_{k+1}^{(n+1)} = x_k + h/2*(f(t_k, x_k) + f(t_{k+1},x_{k+1}^{(n)}) )
+        ! y_{k+1}^{(n+1)} = y_k + h/2*(f(t_k, y_k) + f(t_{k+1},y_{k+1}^{(n)}) )
         !
         xkip1 = x0 + h/2.0_8 * ( f0 + fki )
         ykip1 = y0 + h/2.0_8 * ( g0 + gki )

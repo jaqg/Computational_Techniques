@@ -22,8 +22,7 @@ program final_project
     !
     implicit none
     !
-    integer(kind=8) :: i
-    integer(kind=8) :: n, final_n
+    integer(kind=8) :: i, j, n, final_n
     !
     procedure(), pointer :: method => null()
     real(kind=8), external :: LV
@@ -49,7 +48,7 @@ program final_project
     !
     if (themethod == "Euler" .or. themethod == "E") then
         method => Euler
-    elseif (themethod == "Modified Euler" .or. themethod == "ME") then
+    elseif (themethod == "ModEuler" .or. themethod == "ME") then
         method => modEuler
     ! elseif (themethod == "Taylor" .or. themethod == "T") then
     !     method => Taylor
@@ -59,29 +58,35 @@ program final_project
         write(*,*) 'main.f90 ERROR: wrong method input'
     end if
     !
-    ! If the chosen model is the Simple one, then alphaprime and kappaprime
-    ! must = 0 so the LV logistic model reduces to the simple one
+    ! Assign needed parameters/variables
     !
-    if (themodel == "Simple" .or. themodel == "simple") then
-        alphaprime = 0.0_8
-        kappaprime = 0.0_8
-    end if
+    call assign_params
     !
     ! Main loop
     !
     final_n = 0
     lt1: do i = 1, n
         !
-        if (prey(i)<0 .or. predator(i)<0) exit
+        ! If any individual becomes <0, stop the calculation
+        !
+        do j = 1, nsp
+            if ( y(i,j) < 0 ) exit
+        end do
+        !
+        ! Assign a variable 'final_n' as the number of iteration
         !
         final_n = i
         !
+        ! Calculate the time
+        !
         t(i) = t0 + (dble(i-1) * h)
         !
-        call method( predator(i), prey(i), predator(i+1), prey(i+1) )
-        ! call Euler( predator(i), prey(i), predator(i+1), prey(i+1) )
-        ! call modEuler( predator(i), prey(i), predator(i+1), prey(i+1) )
-        call Rk4( predatorRK(i), preyRK(i), predatorRK(i+1), preyRK(i+1) )
+        ! Call the method as:
+        !
+        ! method( predator_t, prey_t, predator_{t+h}, prey_{t+h} )
+        !
+        call method( y(i,2), y(i,1), y(i+1,2), y(i+1,1) )
+        call Rk4( yRK(i,2), yRK(i,1), yRK(i+1,2), yRK(i+1,1) )
         !
     end do lt1
     !

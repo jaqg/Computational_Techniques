@@ -1,5 +1,4 @@
 # Figure properties
-#figure.figsize: 4, 4
 figure.figsize: 7.2, 4.45
 figure.autolayout: True
 figure.titlesize: 18
@@ -11,12 +10,9 @@ text.usetex: False
 
 # Font properties
  font.family: STIXGeneral
-# font.family: cm
 font.size: 10
-#pdf.fonttype: 42    # uncomment for publication figure
 
 # Math things
-# mathtext.fontset: stix
 mathtext.fontset: cm
 
 # Axes properties
@@ -28,19 +24,14 @@ axes.titlesize: 16
 axes.labelsize: 16
 axes.spines.right: True
 axes.spines.top: True
-axes.grid: False
+axes.grid: True
 axes.titlelocation: center
 axes.formatter.use_mathtext: True
 axes.autolimit_mode: round_numbers
 axes.formatter.limits: -4, 4
-# axes.prop_cycle: cycler(color=['008fd5', 'fc4f30', 'e5ae38', '6d904f', '8b8b8b', '810f7c'])
-# axes.prop_cycle: (cycler(color=['008fd5', 'fc4f30', 'e5ae38', '6d904f', '8b8b8b', '810f7c']) + cycler(linestyle=["-", "--", "-.", "-", "--", "-."]))
-# axes.prop_cycle: cycler(color=['bc80bd','fb8072','b3de69','fdb462','fccde5','8dd3c7','ffed6f','bebada','80b1d3','ccebc5','d9d9d9'])
-# axes.prop_cycle: (cycler(color=['bc80bd','fb8072','b3de69','fdb462','fccde5','8dd3c7','ffed6f'])  + cycler(linestyle=["-", "--", "-.", ":", "-", "--", "-."]))
+axes.xmargin: 0
+axes.ymargin: 0
 axes.prop_cycle: (cycler(color=['E69F00', '56B4E9', '009E73', '0072B2', 'D55E00', 'CC79A7', 'F0E442']))
-# axes.prop_cycle: (cycler(color=['E69F00', '56B4E9', '009E73', '0072B2', 'D55E00', 'CC79A7', 'F0E442']) + cycler(linestyle=["-", "--", "-.", ":", "-", "--", "-."]))
-# axes.prop_cycle: (cycler(color=['E69F00', '56B4E9', '009E73', '0072B2', 'D55E00', 'CC79A7', 'F0E442']) + cycler(linestyle=["-", "-", "-", "-", "-", "-", "-"]) +  cycler(marker=["o", "^", "s", "v", "o", "s", "^"]))
-
 
 # Tick properties
 # x-axis
@@ -66,8 +57,6 @@ ytick.minor.width: 0.6
 # Line properties
 lines.linewidth: 2
 lines.markersize: 4
-# lines.markeredgecolor: black
-# lines.markerfacecolor: none
 
 # Legend properties
 legend.framealpha: 0.8

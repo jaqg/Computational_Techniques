@@ -1,28 +1,28 @@
 # Model: Lotka-Volterra "Simple" or "Logistic"
-Logistic
+Simple
 # Method: Euler "E", Modified Euler "ME", 4th order Runge-Kuta "RK4"
-E
+RK4
 # Threshold in case of the Modified Euler method (to cut iterating over n)
 0.1
 # Initial time of the simulation (t_0)
 0.0
 # Time step (h)
-0.01
+0.005
 # Time of the simulation
-500.0
+100.0
 # Initial population of PREY (y_0)
-100.0
+10.0
 # Initial population of PREDATOR (x_0)
-100.0
+10.0
 # Constant ALPHA
-1.4
+0.4
 # Constant ALPHA PRIME
 2.0D-6
 # Constant BETA
-0.2
+0.1
 # Constant KAPPA
-15.0
+1.1
 # Constant KAPPA PRIME
 2.0D-6
 # Constant LAMBDA
-0.1
+0.4
