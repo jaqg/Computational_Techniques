@@ -21,7 +21,7 @@ subroutine Euler(f, y0, t0, tf, h, t, y)
     !
     ! Dummy variables
     !
-    integer :: i, j, ierr, nt
+    integer :: i, ierr, nt
     !
     ! Interface
     !

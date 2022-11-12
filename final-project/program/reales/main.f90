@@ -51,7 +51,7 @@ program final_project
     !
     procedure(func) :: LV
     procedure(methods), pointer :: method => null()
-    procedure(methods) :: Euler
+    procedure(methods) :: Euler, RK4
     procedure(methods2) :: modEuler
     !
     ! ========================= START OF THE PROGRAM =========================
@@ -88,7 +88,11 @@ program final_project
     !
     call assign_params
     !
-    ! Main loop
+    ! Main calculation
+    !
+    ! Calculate Runge-Kutta for comparison
+    !
+    call RK4( LV, y0, t0, tf, h, t, yRK )
     !
     if (themethod == "Euler" .or. themethod == "E") then
         write(*,*) 'The method is Euler'
@@ -96,10 +100,11 @@ program final_project
     elseif (themethod == "ModEuler" .or. themethod == "ME") then
         write(*,*) 'The method is Modified Euler'
         call modEuler( LV, y0, t0, tf, h, MEthreshold, t, y )
-    ! elseif (themethod == "Taylor" .or. themethod == "T") then
-    !     method => Taylor
-    ! elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
-    !     method => RK4
+    elseif (themethod == "Taylor" .or. themethod == "T") then
+        write(*,*) 'The method is Taylor series'
+    elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
+        write(*,*) 'The method is 4th order Runge-Kutta'
+        y = yRK
     else
         write(*,*) 'main.f90 ERROR: wrong method input'
     end if
