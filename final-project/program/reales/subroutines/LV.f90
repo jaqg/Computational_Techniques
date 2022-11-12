@@ -3,57 +3,73 @@
 ! | Creation date: Wednesday 12:01:03 26-10-2022 |
 ! +----------------------------------------------+
 
-function LV(c1, c1prime, c2, p1, p2) result(res)
+function LV(t, y) result(res)
     !
     ! Lotka-Volterra model.
     !
-    ! Simple model (c1prime = 0):
-    !  dp/dt = c1 * p1 + c2 * p1 * p2
+    ! In general, we can write the L-V equations as:
     !
-    !     Prey (y):
-    !     dy/dt = kappa * y - lambda * x * y
-    !         c1      -> kappa
-    !         c1prime -> 0
-    !         c2      -> -lambda
-    !         p1      -> y
-    !         p2      -> x
+    ! dy/dt = f(t,y) = A * y + B * y**2 + C * x * y
     !
-    !     Predator (x):
-    !      dx/dt = -alpha * x + beta * x * y
-    !         c1      -> -alpha
-    !         c1prime -> 0
-    !         c2      -> beta
-    !         p1      -> x
-    !         p2      -> y
+    ! where A, B, C are parameters (constants).
     !
-    ! Logistic model (c1prime /= 0):
-    !  dp/dt = c1 * p1 + c1prime * p1**2 + c2 * p1 * p2
+    ! Then, we have two models:
     !
-    !     Prey (y):
-    !     dy/dt = kappa * y - kappaprime * y**2 - lambda * x * y
-    !         c1      -> kappa
-    !         c1prime -> -kappaprime
-    !         c2      -> -lambda
-    !         p1      -> y
-    !         p2      -> x
+    ! - Simple (B = 0):
+    !  dy/dt = A * y + C * x * y
     !
-    !     Predator (x):
-    !      dx/dt = -alpha * x + alphaprime * x**2 + beta * x * y
-    !         c1      -> -alpha
-    !         c1prime -> alphaprime
-    !         c2      -> beta
-    !         p1      -> x
-    !         p2      -> y
+    ! - Logistic (B /= 0):
+    !  dy/dt = A * y + B * y**2 + C * x * y
+    !
+    use IO, only: params
     !
     implicit none
     !
-    real(kind=8), intent(in) :: c1, c1prime, c2
-    real(kind=8), intent(in) :: p1, p2
-    real(kind=8) :: res
+    ! Input time t is passed as a scalar
     !
-    res = c1 * p1 + &
-        & c1prime * p1**2 + &
-        & c2 * p1 * p2
+    ! Species is treated as y(i,:) for a -time- step 'i', so it can be passed
+    ! as a vector y(:)
+    !
+    ! The calculated species are output as a vector of same dimensions as
+    ! input species
+    !
+    real(kind=8), optional, intent(in) :: t
+    real(kind=8), dimension(:), intent(in) :: y
+    real(kind=8), dimension(:), allocatable :: res
+    !
+    ! Dummy variables
+    !
+    integer :: i, ierr
+    !
+    ! Dumb use of t to remove warning: "unused variable"
+    !
+    if(.false.) print *, t
+    !
+    ! Allocate 'res'
+    !
+    allocate(res(size(y)), stat=ierr)
+    if (ierr .ne. 0) stop 'LV.f90: Error in allocation of res'
+    !
+    ! Calculation
+    !
+    do i = 1, size(y)-1
+        !
+        ! As (in this case) species are store in array 'y' as pairs (prey/pred)
+        ! we can ran the calculation also by pairs as
+        !
+        ! Prey -> y(i) -> res(i)
+        !
+        res(i) = params(1,i) * y(i) + &
+               & params(2,i) * y(i)**2 + &
+               & params(3,i) * y(i) * y(i+1)
+        !
+        ! Predator -> y(i+1) -> res(i+1)
+        !
+        res(i+1) = params(1,i+1) * y(i+1) + &
+                 & params(2,i+1) * y(i+1)**2 + &
+                 & params(3,i+1) * y(i+1) * y(i)
+        !
+    end do
     !
     return
 end function LV

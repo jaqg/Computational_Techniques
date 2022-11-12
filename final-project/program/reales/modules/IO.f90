@@ -19,6 +19,7 @@ module IO
     ! so nsp = 2
     !
     integer, parameter :: nsp = 2
+    real(kind=8), dimension(:), allocatable :: y0
     real(kind=8), dimension(:,:), allocatable :: y, yRk
     !
     ! We can write the Lotka-Volterra equations as:
@@ -46,6 +47,7 @@ module IO
     !
     character(len=80) :: themodel, themethod
     real(kind=8) :: MEthreshold
+    integer(kind=8) :: TaylorTerms
     real(kind=8) :: t0, h, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
     !
@@ -79,6 +81,11 @@ module IO
             !
             read(uf,*)
             read(uf,*) MEthreshold
+            !
+            ! Number of terms of Taylor expansion in case of Taylor method
+            !
+            read(uf,*)
+            read(uf,*) TaylorTerms
             !
             ! Initial time (t0)
             !
@@ -140,6 +147,7 @@ module IO
         end subroutine read_input
         !
         subroutine allocate_arrays(n)
+        ! subroutine allocate_arrays
             !
             ! Subroutine to allocate arrays
             !
@@ -154,11 +162,15 @@ module IO
             allocate(params(nterms,nsp), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of params'
             !
-            allocate(y(n+1,nsp), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of prey'
+            allocate(y0(nsp), stat=ierr)
+            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of y0'
             !
-            allocate(yRK(n+1,nsp), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of preyRK'
+            ! allocate(y(n,nsp), stat=ierr)
+            ! if (ierr .ne. 0) stop 'IO.f90: Error in allocation of y'
+            !
+            !TODO: eliminar cuando incluya la subrutina de RK
+            allocate(yRK(n,nsp), stat=ierr)
+            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of yRK'
             !
             return
         end subroutine allocate_arrays
@@ -188,10 +200,12 @@ module IO
             !
             ! Initial values of species
             !
-            y(1,1)   = prey0
-            y(1,2)   = predator0
-            yRK(1,1) = prey0
-            yRK(1,2) = predator0
+            y0(1) = prey0
+            y0(2) = predator0
+            ! y(1,1)   = prey0
+            ! y(1,2)   = predator0
+            ! yRK(1,1) = prey0
+            ! yRK(1,2) = predator0
             !
             return
         end subroutine assign_params
@@ -216,17 +230,29 @@ module IO
             999 format('------------------------------------------------')
             899 format(a, 1x, f10.6)
             !
-            write(uf,'(a)') '+-------------------------------------+'
-            write(uf,'(a)') '|        Program final_project        |'
-            write(uf,'(a)') '| Author: Jose Antonio Quinonero Gris |'
-            write(uf,'(a)') '+-------------------------------------+'
+            write(uf,'(20x,a)') '+-------------------------------------+'
+            write(uf,'(20x,a)') '|        Program final_project        |'
+            write(uf,'(20x,a)') '| Author: Jose Antonio Quinonero Gris |'
+            write(uf,'(20x,a)') '+-------------------------------------+'
             write(uf,*)
             !
-            themodel = trim(themodel)
+            ! --- INPUT ---
+            !
+            write(uf,'(33x,a)') '+-----------+'
+            write(uf,'("+",32("-"),"|",3x,"INPUT",3x,"|",32("-"),"+")')
+            write(uf,'(33x,a)') '+-----------+'
+            !
             write(uf,'(a,1x,a)') 'Model:', themodel
             !
-            themethod = trim(themethod)
             write(uf,'(a,1x,a)') 'Method:', themethod
+            !
+            if (themethod == "ModEuler" .or. themethod == "ME") then
+                write(uf,'(a,E8.2)') 'ME convergence threshold: ', MEthreshold
+            elseif (themethod == "Taylor" .or. themethod == "T") then
+                write(uf,'(a,i0)') 'Number of terms of Taylor expansion:', &
+                                  & Taylorterms
+            end if
+            !
             write(uf,*)
             !
             write(uf,'(a,1x,f10.2)') 'Initial time, t_0 (arbitrary units):', t0
@@ -246,20 +272,28 @@ module IO
             write(uf,899) 'lambda =', lambda
             write(uf,*)
             !
+            ! --- OUTPUT ---
+            !
+            write(uf,'(33x,a)') '+------------+'
+            write(uf,'("+",32("-"),"|",3x,"OUTPUT",3x,"|",31("-"),"+")')
+            write(uf,'(33x,a)') '+------------+'
+            !
             write(uf,'(a)') 'Results:'
             write(uf,'(a,1x,i0)') 'Number of iterations:', final_n
             write(uf,'(a,1x,f15.2)') 'Total time of simulation:', t(final_n)
             write(uf,*)
             write(uf,999)
+            write(uf,'(33x,a)') themethod
+            write(uf,'(24x,a)') '-----------------------'
             write(uf,'(11x, "t", 12x, "Prey", 11x, "Predator")')
             write(uf2,'(a)') themethod
-            write(uf2,'(11x, "t", 12x, "Prey", 11x, "Predator")')
+            write(uf2,*) 't, prey, predator'
             write(uf,999)
             !
             lw1: do i = 1, final_n
-                write(uf,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp )
+                write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp )
                 ! write(uf2,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp )
-                write(uf2,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp ), &
+                write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
                                             & ( yRK(i,j), j=1,nsp )
             end do lw1
             !

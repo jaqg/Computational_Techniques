@@ -40,7 +40,7 @@ GRAPHDATA=$(GRAPHDIR)/out-graph.dat
 #
 # Create main executable
 #
-$(MAINEX): $(OBJ)
+$(MAINEX): $(OBJ) $(LIB)
 	$(FC) $(FFLAGS) -o $@ $(MODOBJ) $(MAINOBJ) -L./$(LIBPATH) -l$(LIB)
 #
 # Compile modules
@@ -50,7 +50,7 @@ $(MODMOD): $(MODSRC)
 #
 # `make lib` to create/update library
 #
-lib: $(SUBOBJ)
+$(LIB): $(SUBOBJ)
 	$(AR) lib$(LIB).a $^
 #
 # `make plot` to create/update the plot
@@ -70,4 +70,4 @@ cleanplots:
 # Clean
 #
 clean:
-	@rm -f *.mod *.o $(SUBOBJ) main
+	@rm -f lib$(LIB).a *.mod *.o $(SUBOBJ) main

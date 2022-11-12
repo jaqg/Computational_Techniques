@@ -2,77 +2,101 @@
 ! | Author: Jose Antonio Quinonero Gris         |
 ! | Creation date: Saturday 23:45:16 05-11-2022 |
 ! +---------------------------------------------+
-subroutine modEuler(x0, y0, resx, resy)
+subroutine modEuler(f, y0, t0, tf, h, threshold, t, y)
     !
     ! Modified Euler's method with the trapezoid method:
-    ! y_k^{(n+1)} = y_0 + h/2 * ( f(t_0, y_0) + f(t_k, y_k^{(n)}) )
-    !
-    use IO, only: alpha, alphaprime, beta, kappa, kappaprime, lambda, &
-                & h, MEthreshold
+    ! y_{k+1}^{(n+1)} = y_k + h/2 * ( f(t_k, y_k) + f(t_{k+1}, y_{k+1}^{(n)}) )
     !
     implicit none
     !
-    real(kind=8), intent(in) :: x0, y0
-    real(kind=8), intent(out) :: resx, resy
-    real(kind=8) :: xki, xkip1, yki, ykip1
-    real(kind=8) :: f0, g0, fki, gki
-    real(kind=8) :: errx, erry
+    ! Initial values are passed as a 1D array 'y0'
+    ! Initial 't0' and final time 'tf', as well as time step 'h', are passed
+    ! as scalars
+    ! Results are stored in 1D array for time 't', and 2D array for 'y'
     !
-    interface
-        real(kind=8) function LV(c1, c1prime, c2, p1, p2)
+    real(kind=8), dimension(:), intent(in) :: y0
+    real(kind=8), intent(in) :: t0, tf, h, threshold
+    real(kind=8), dimension(:), allocatable, intent(out) :: t
+    real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+    !
+    ! Dummy variables
+    !
+    integer :: i, j, ierr, nt
+    real(kind=8), dimension(:), allocatable :: ykn, yknp1
+    !
+    ! Interface
+    !
+    abstract interface
+        function func(t, y) result(res)
             implicit none
-            real(kind=8), intent(in) :: c1, c1prime, c2, p1, p2
-        end function LV
+            real(kind=8), optional, intent(in) :: t
+            real(kind=8), dimension(:), intent(in) :: y
+            real(kind=8), dimension(:), allocatable :: res
+        end function func
     end interface
     !
-    ! La subrutina sera llamada a cada tiempo t_k (a cada indice k), por lo que
-    ! dentro de esta subrutina hay que loopear sobre n hasta un threshold dado
+    procedure(func) :: f
     !
-    ! x0 e y0 (input arguments) deben ser los valores de x e y a cada tiempo,
-    ! es decir:
-    ! x0 -> predator(i) ; y0 -> prey(i)
-    ! de manera que empezando a i=1:
-    ! x0 -> predator(1) = predator_0 ; y0 -> prey(1) = prey_0
+    ! Number of points
     !
+    nt = int( (tf - t0)/h ) + 1
     !
-    ! f0 = dx/dt |_{t=t_0} ; g0 = dy/dt |_{t=t_0}
+    ! Allocate arrays
     !
-    f0 = LV(-alpha, alphaprime, beta, x0, y0)
-    g0 = LV(kappa, -kappaprime, -lambda, y0, x0)
+    allocate(t(nt), stat=ierr)
+    if (ierr .ne. 0) stop 'modEuler.f90: Error in allocation of t'
     !
-    ! xk(1) -> x_{k+1}^{(0)} = x_k + h * f(t_k, x_k)
-    ! yk(1) -> y_{k+1}^{(0)} = y_k + h * g(t_k, y_k)
+    allocate(y(nt,size(y0)), stat=ierr)
+    if (ierr .ne. 0) stop 'modEuler.f90: Error in allocation of y'
     !
-    xki = x0 + h * f0
-    yki = y0 + h * g0
+    allocate(ykn(size(y0)), stat=ierr)
+    if (ierr .ne. 0) stop 'modEuler.f90: Error in allocation of ykn'
     !
-    ml: do
+    allocate(yknp1(size(y0)), stat=ierr)
+    if (ierr .ne. 0) stop 'modEuler.f90: Error in allocation of yknp1'
+    !
+    ! Initial values
+    !
+    y(1,:) = y0(:)
+    t(1) = t0
+    !
+    ! Calculation
+    !
+    ml: do i = 1, nt-1
         !
-        ! fk(n) -> f_k^{(n)} = f(x_k^{(n)},y_k^{(n)})
-        ! gk(n) -> g_k^{(n)} = g(x_k^{(n)},y_k^{(n)})
+        ! If any individual becomes <0, stop the calculation
         !
-        fki = LV(-alpha, alphaprime, beta, xki, yki)
-        gki = LV(kappa, -kappaprime, -lambda, yki, xki)
+        ! TODO checkear si hay alguna funcion del tipo any()
+        do j = 1, size(y0)
+            if ( y(i,j) < 0 ) exit
+        end do
         !
-        ! x_{k+1}^{(n+1)} = x_k + h/2*(f(t_k, x_k) + f(t_{k+1},x_{k+1}^{(n)}) )
-        ! y_{k+1}^{(n+1)} = y_k + h/2*(f(t_k, y_k) + f(t_{k+1},y_{k+1}^{(n)}) )
+        ! Time
         !
-        xkip1 = x0 + h/2.0_8 * ( f0 + fki )
-        ykip1 = y0 + h/2.0_8 * ( g0 + gki )
+        t(i+1) = t0 + (dble(i) * h)
         !
-        ! Check for convergence
+        ! Initialitation
         !
-        errx = abs( xkip1 - xki )
-        erry = abs( ykip1 - yki )
+        ykn(:) = y(i,:) + h * f(t(i), y(i,:)) ! -> y_k^{(0)}
         !
-        if (errx < MEthreshold .and. erry < MEthreshold) then
-            resx = xkip1
-            resy = ykip1
-            exit
-        end if
+        cl: do
+            !
+            ! Calculation of y_{k+1}^{(n+1)}
+            ! ( Note: on first iteration y_{k+1}^{(n+1)} -> y_{k+1}^{(1)} )
+            !
+            yknp1(:) = y(i,:) + h/2.0_8*(f(t(i), y(i,:)) + f(t(i+1), ykn(:)))
+            !
+            ! Check for convergence
+            !
+            if ( all( abs(yknp1 - ykn) < threshold ) ) exit cl
+            !
+            ykn(:) = yknp1(:)
+            !
+        end do cl
         !
-        xki = xkip1
-        yki = ykip1
+        ! Store the final -converged- result
+        !
+        y(i+1,:) = yknp1(:)
         !
     end do ml
     !

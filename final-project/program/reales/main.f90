@@ -24,10 +24,35 @@ program final_project
     !
     integer(kind=8) :: i, j, n, final_n
     !
-    procedure(), pointer :: method => null()
-    real(kind=8), external :: LV
-    external :: Euler, modEuler, RK4
+    interface
+        function func(t, y) result(res)
+            implicit none
+            real(kind=8), optional, intent(in) :: t
+            real(kind=8), dimension(:), intent(in) :: y
+            real(kind=8), dimension(:), allocatable :: res
+        end function func
+        subroutine methods(f, y0, t0, tf, h, t, y)
+            implicit none
+            procedure(func) :: f
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+        end subroutine methods
+        subroutine methods2(f, y0, t0, tf, h, threshold, t, y)
+            implicit none
+            procedure(func) :: f
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h, threshold
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+        end subroutine methods2
+    end interface
     !
+    procedure(func) :: LV
+    procedure(methods), pointer :: method => null()
+    procedure(methods) :: Euler
+    procedure(methods2) :: modEuler
     !
     ! ========================= START OF THE PROGRAM =========================
     !
@@ -43,20 +68,21 @@ program final_project
     ! Allocate arrays
     !
     call allocate_arrays(n)
+    ! call allocate_arrays
     !
     ! Set the pointer 'method' to the chosen method
     !
-    if (themethod == "Euler" .or. themethod == "E") then
-        method => Euler
-    elseif (themethod == "ModEuler" .or. themethod == "ME") then
-        method => modEuler
+    ! if (themethod == "Euler" .or. themethod == "E") then
+    !     method => Euler
+    ! elseif (themethod == "ModEuler" .or. themethod == "ME") then
+    !     method => modEuler
     ! elseif (themethod == "Taylor" .or. themethod == "T") then
     !     method => Taylor
-    elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
-        method => RK4
-    else
-        write(*,*) 'main.f90 ERROR: wrong method input'
-    end if
+    ! elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
+    !     method => RK4
+    ! else
+    !     write(*,*) 'main.f90 ERROR: wrong method input'
+    ! end if
     !
     ! Assign needed parameters/variables
     !
@@ -64,31 +90,33 @@ program final_project
     !
     ! Main loop
     !
-    final_n = 0
-    lt1: do i = 1, n
+    if (themethod == "Euler" .or. themethod == "E") then
+        write(*,*) 'The method is Euler'
+        call Euler( LV, y0, t0, tf, h, t, y )
+    elseif (themethod == "ModEuler" .or. themethod == "ME") then
+        write(*,*) 'The method is Modified Euler'
+        call modEuler( LV, y0, t0, tf, h, MEthreshold, t, y )
+    ! elseif (themethod == "Taylor" .or. themethod == "T") then
+    !     method => Taylor
+    ! elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
+    !     method => RK4
+    else
+        write(*,*) 'main.f90 ERROR: wrong method input'
+    end if
+    !
+    ! call method( LV, y0, t0, tf, h, t, y )
+    !
+    ! If any individual becomes <0, stop
+    !
+    do i = 1, size(y,1)
         !
-        ! If any individual becomes <0, stop the calculation
-        !
-        do j = 1, nsp
-            if ( y(i,j) < 0 ) exit
+        do j = 1, size(y,2)
+            if ( y(i,j) < 0 ) write(*,*) 'y<0, exiting' ; exit
         end do
-        !
-        ! Assign a variable 'final_n' as the number of iteration
         !
         final_n = i
         !
-        ! Calculate the time
-        !
-        t(i) = t0 + (dble(i-1) * h)
-        !
-        ! Call the method as:
-        !
-        ! method( predator_t, prey_t, predator_{t+h}, prey_{t+h} )
-        !
-        call method( y(i,2), y(i,1), y(i+1,2), y(i+1,1) )
-        call Rk4( yRK(i,2), yRK(i,1), yRK(i+1,2), yRK(i+1,1) )
-        !
-    end do lt1
+    end do
     !
     ! Write results
     !

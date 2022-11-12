@@ -1,9 +1,11 @@
 # Model: Lotka-Volterra "Simple" or "Logistic"
 Simple
 # Method: Euler "E", Modified Euler "ME", 4th order Runge-Kuta "RK4"
-RK4
+ME
 # Threshold in case of the Modified Euler method (to cut iterating over n)
-0.1
+0.00001
+# Number of terms of Taylor expansion in case of Taylor method
+3
 # Initial time of the simulation (t_0)
 0.0
 # Time step (h)
