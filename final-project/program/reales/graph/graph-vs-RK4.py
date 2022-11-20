@@ -24,9 +24,10 @@ plt.style.use(style_file)
 fichero_datos = 'out-graph.dat'
 fichero_datos = os.path.dirname(__file__)+'/{}'.format(fichero_datos)
 with open(fichero_datos, 'r') as file:
+    model  = file.readline().strip()
     method = file.readline().strip()
 file.close()
-t, prey, predator, preyRK, predatorRK = np.loadtxt(fichero_datos, unpack=True, skiprows=2)
+t, prey, predator, preyRK, predatorRK = np.loadtxt(fichero_datos, unpack=True, skiprows=3)
 
 #
 # Plot
@@ -40,7 +41,7 @@ ax.plot( t, predator  , label='$x$ ({})'.format(method) )
 ax.plot( t, prey      , ls='--', label='$y$ ({})'.format(method) )
 
 ax.set(
-        title=r'Lotka-Volterra model: Foxes ($x$) vs Rabbits ($y$)',
+        title=r'Lotka-Volterra {} model: Foxes ($x$) vs Rabbits ($y$)'.format(model),
         # title=r'Lotka-Volterra model (Foxes $x_0 = {x0:.0f}$, Rabbits $y_0 = {y0:.0f}$)'\
        # .format(x0=predator[0], y0=prey[0]),
        xlabel=r'$t$ (arbitrary units)',

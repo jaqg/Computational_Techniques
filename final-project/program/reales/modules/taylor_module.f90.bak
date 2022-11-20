@@ -1,0 +1,355 @@
+! +-------------------------------------------+
+! | Author: Jose Antonio Quinonero Gris       |
+! | Creation date: Sunday 17:19:49 13-11-2022 |
+! +-------------------------------------------+
+module Taylor_module
+    implicit none
+    contains
+        subroutine derivatives(n, y, ders)
+            !
+            ! Subroutine to compute the derivatives of the LV equations
+            !
+            ! n => number of derivatives to compute -> y^{(n)'}
+            ! y -> y(t) -> y(t,:) => poblations at a time t
+            ! ders -> ders(n,:) => evaluated derivatives for each
+            !                          individual (x, y, ..., z)
+            !         _                           _
+            ! ders = | x^{(0)} y^{(0)} ... z^{(0)} |
+            !        | x^{(1)} y^{(1)} ... z^{(1)} |
+            !        | :       :           :       |
+            !        | x^{(n)} y^{(n)} ... z^{(n)} |
+            !         -                           -
+            !
+            use IO, only: params
+            !
+            implicit none
+            !
+            integer, intent(in)  :: n
+            real(kind=8), dimension(:), intent(in) :: y
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: ders
+            !
+            ! Dummy variables
+            !
+            integer :: i, j, k, ierr
+            real(kind=8) :: xtmp, ytmp
+            real(kind=8), dimension(:,:), allocatable :: C
+            ! real(kind=8) :: x0, y0, x1, y1, x2, y2, x3, y3, x4, y4
+            !
+            ! Coefficients array
+            !
+            allocate(C(n,n), stat=ierr)
+            if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of C'
+            !
+            C = 0.0_8
+            C(:,1) = 1.0_8
+            !
+            Cl1: do i = 1, n-1
+                Cl2: do j = 1, n-1
+                    C(i+1,j+1) = C(i,j) + C(i,j+1)
+                end do Cl2
+            end do Cl1
+            !
+            ! Calculate the derivatives
+            !
+            allocate(ders(n, size(y)), stat=ierr)
+            if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of &
+                                  & ders'
+            !
+            ! First row of 'ders', ders(1,:) -> x^{(0)} y^{(0)} ... z^{(0)}
+            !                                -> y(1)    y(2)    ... y(N)
+            !
+            ders = 0.0_8
+            ders(1,:) = y(:)
+            !
+            dl1: do i = 1, n-1
+                dl2: do j = 1, size(y)-1
+                !
+                ! Writing the LV equation as dy/dt = a * y + b * x * y, then
+                !
+                ! y_t^{(n+1)} = a * y_t^{(n+1)} +
+                !               + b * sum_{k=0}^n C_{nk} y_t^{(n)} x_t^{(n)}
+                !
+                ! First, compute the sum. We perform the calculation by pairs
+                ! of prey/predators -> y(i)/y(i+1)
+                !
+                ytmp = 0.0_8 ; xtmp = 0.0_8
+                dl3: do k = 1, i
+                    ytmp = ytmp + C(i,k) * ders(k,j) * ders(i-k+1,j+1)
+                    xtmp = xtmp + C(i,k) * ders(k,j+1) * ders(i-k+1,j)
+                end do dl3
+                !
+                ders(i+1,j) = params(1,j) * ders(i,j) + params(3,j) * ytmp
+                ders(i+1,j+1) = params(1,j+1) * ders(i,j+1) + &
+                              & params(3,j+1) * xtmp
+                !
+                end do dl2
+            end do dl1
+            !
+            !
+            !
+            !y0 = y(1) ; x0 = y(2)
+            !!
+            !y1 = params(1,1) * y0 + params(3,1) * x0 * y0
+            !x1 = params(1,2) * x0 + params(3,2) * x0 * y0
+            !!
+            !y2 = params(1,1) * y1 + params(3,1) * ( y0*x1 + y1*x0 )
+            !x2 = params(1,2) * x1 + params(3,2) * ( x0*y1 + x1*y0 )
+            !!
+            !y3 = params(1,1) * y2 + params(3,1) * ( y0*x2 + 2.0_8*y1*x1 + y2*x0 )
+            !x3 = params(1,2) * x2 + params(3,2) * ( x0*y2 + 2.0_8*x1*y1 + x2*y0 )
+            !!
+            !y4 = params(1,1) * y3 + params(3,1) * ( y0*x3 + 3.0_8*y1*x2 + 3.0_8*y2*x1 + y3*x0 )
+            !x4 = params(1,2) * x3 + params(3,2) * ( x0*y3 + 3.0_8*x1*y2 + 3.0_8*x2*y1 + x3*y0 )
+            !!
+            !write(*,*) '--------------------------------------------------------------'
+            !write(*,*) 'y1 calc =', y1, x1
+            !write(*,*) 'y2 calc =', y2, x2
+            !write(*,*) 'y3 calc =', y3, x3
+            !write(*,*) 'y4 calc =', y4, x4
+            !
+            return
+        end subroutine derivatives
+        !
+        subroutine Taylor(y0, t0, tf, h, nterms, t, y)
+            !
+            ! Taylor's method:
+            ! y(t_{k+1}) = y_{k+1} = y_k + y_k' * h + 1/2 y_k'' * h**2
+            !                       + 1/6 y_0''' * h**3 + ...
+            !                      = sum_{n=0}^N 1/n! * y_k^{(n)'} * h^n
+            ! where
+            ! h = t_{k+1} - t_k
+            !
+            implicit none
+            !
+            ! Initial values are passed as a 1D array 'y0'
+            ! Initial 't0' and final time 'tf', as well as time step 'h', are
+            ! passed as scalar
+            ! Results are stored in 1D array for time 't', and 2D array for 'y'
+            !
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h
+            integer, intent(in) :: nterms
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+            !
+            ! Dummy variables
+            !
+            integer :: i, j, ierr, nt
+            real(kind=8), dimension(:,:), allocatable :: ders
+            real(kind=8), dimension(:), allocatable :: xtmp
+            !
+            ! Interface
+            !
+            ! interface
+            !     subroutine derivatives(n, y, ders)
+            !         implicit none
+            !         integer, intent(in)  :: n
+            !         real(kind=8), dimension(:), intent(in) :: y
+            !         real(kind=8), allocatable, intent(out) :: ders(:,:)
+            !     end subroutine derivatives
+            ! end interface
+            !
+            ! Check that the number of elements of the derivatives array 'ders'
+            ! is greater (or equal) than the terms of the expansion, 'nterms'
+            !
+            ! if (nterms > size(ders,1)) then
+            !     write(*,*) 'ERROR Taylor.f90: Number of terms to compute &
+            !                & exceedes size of derivatives array.'
+            !     stop
+            ! end if
+            !
+            ! Number of points
+            !
+            nt = int( (tf - t0)/h ) + 1
+            !
+            ! Allocate arrays
+            !
+            allocate(t(nt), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor.f90: Error in allocation of t'
+            !
+            allocate(y(nt,size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor.f90: Error in allocation of y'
+            !
+            allocate(xtmp(size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor.f90: Error in allocation of xtmp'
+            !
+            y = 0.0_8 ; t = 0.0_8
+            !
+            ! Initial values
+            !
+            y(1,:) = y0(:)
+            t(1) = t0
+            ! ders = 0.0_8
+            !
+            ! Calculation
+            !
+            l1: do i = 1, nt-1
+                !!
+                !! If any individual becomes <0, stop the calculation
+                !!
+                !do j = 1, size(y0)
+                !    if ( y(i,j) < 0 ) exit
+                !end do
+                !
+                ! Time
+                !
+                t(i+1) = t0 + dble(i) * h
+                !
+                ! Calculate derivatives
+                !
+                call derivatives(nterms, y(i,:), ders)
+                !
+                ! y(t)
+                !
+                xtmp(:) = y(i+1,:)
+                !
+                l2: do j = 0, nterms-1
+                    !
+                    ! y(t_{k+1}) = y_{k+1} = y_k + y_k' * h + 1/2 y_k'' * h**2
+                    !                       + 1/6 y_0''' * h**3 + ...
+                    !                     = sum_{n=0}^N 1/n! * y_k^{(n)'} * h^n
+                    ! where
+                    ! h = t_{k+1} - t_k
+                    !
+                    ! ( Note: n! = gamma(n+1) )
+                    !
+                    xtmp(:) = xtmp(:) + &
+                            & 1.0_8/dgamma(dble(j+1)) * ders(j+1,:) * h**j
+                    !
+                end do l2
+                !
+                y(i+1,:) = xtmp(:)
+                !
+            end do l1
+            !
+            return
+        end subroutine taylor
+        !
+        subroutine Taylor2(y0, t0, tf, h, nterms, ders, t, y)
+            !
+            ! Taylor's method:
+            ! y(t) = y_0 + y_0' * h + 1/2 y_0'' * h**2 + 1/6 y_0''' * h**3 + ...
+            !      = sum_{k=0}^n 1/n! * y_0^{(n)'} * h^n
+            !
+            use IO, only: params
+            !
+            implicit none
+            !
+            ! Initial values are passed as a 1D array 'y0'
+            ! Initial 't0' and final time 'tf', as well as time step 'h', are passed
+            ! as scalar
+            ! Results are stored in 1D array for time 't', and 2D array for 'y'
+            !
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h
+            integer, intent(in) :: nterms
+            real(kind=8), dimension(:,:), intent(in) :: ders
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+            !
+            ! Dummy variables
+            !
+            integer :: i, j, ierr, nt
+            real(kind=8) :: dt
+            real(kind=8), dimension(:), allocatable :: xtmp
+            real(kind=8), dimension(:), allocatable :: yp0, yp1, yp2
+            !
+            abstract interface
+                function func(t, y) result(res)
+                    implicit none
+                    real(kind=8), optional, intent(in) :: t
+                    real(kind=8), dimension(:), intent(in) :: y
+                    real(kind=8), dimension(:), allocatable :: res
+                end function func
+            end interface
+            !
+            procedure(func) :: LV
+            !
+            ! Check that the number of elements of the derivatives array 'ders' is
+            ! greater (or equal) than the terms of the expansion, 'nterms'
+            !
+            if (nterms > size(ders,1)) then
+                write(*,*) 'ERROR taylor.f90: Number of terms to compute exceedes &
+                          & size of derivatives array.'
+                stop
+            end if
+            !
+            ! Number of points
+            !
+            nt = int( (tf - t0)/h ) + 1
+            !
+            ! Allocate arrays
+            !
+            allocate(t(nt), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of t'
+            !
+            allocate(y(nt,size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of y'
+            !
+            allocate(xtmp(size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of xtmp'
+            !
+            allocate(yp0(size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of yp3'
+            !
+            allocate(yp1(size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of yp1'
+            !
+            allocate(yp2(size(y0)), stat=ierr)
+            if (ierr .ne. 0) stop 'Taylor2.f90: Error in allocation of yp2'
+            !
+            y = 0.0_8 ; t = 0.0_8
+            !
+            ! Initial values
+            !
+            y(1,:) = y0(:)
+            t(1) = t0
+            !
+            ! Calculation
+            !
+            l1: do i = 1, nt-1
+                !!
+                !! If any individual becomes <0, stop the calculation
+                !!
+                !do j = 1, size(y0)
+                !    if ( y(i,j) < 0 ) exit
+                !end do
+                !
+                ! Time
+                !
+                dt = dble(i) * h
+                !
+                t(i+1) = t0 + dt
+                !
+                ! y(t)
+                !
+                do j = 1, size(y0)-1
+                    !
+                    yp0(:)     = LV( t(i), y(i,:) )
+                    !
+                    yp1(j)     = params(1,j) * yp0(j) + params(3,j) * ( &
+                               & y(i,j) * yp0(j+1) + yp0(j) * y(i,j+1) )
+                    yp1(j+1)   = params(1,j+1) * yp0(j+1) + params(3,j+1) * ( &
+                               & y(i,j+1) * yp0(j) + yp0(j+1) * y(i,j) )
+                    !
+                    yp2(j)     = params(1,j) * yp1(j) + params(3,j) * ( &
+                               & y(i,j) * yp1(j+1) + 2.0_8 * yp0(j) * yp0(j+1) + &
+                               & yp1(j) * y(i,j+1) )
+                    yp2(j+1)   = params(1,j+1) * yp1(j+1) + params(3,j+1) * ( &
+                               & y(i,j+1) * yp1(j) + 2.0_8 * yp0(j+1) * yp0(j) + &
+                               & yp1(j+1) * y(i,j) )
+                    !
+                    y(i+1,j)   = y(i,j) + yp0(j) * h + &
+                               & 1.0_8/2.0_8 * yp1(j) * h**2 + &
+                               & 1.0_8/6.0_8 * yp2(j) * h**3
+                    y(i+1,j+1) = y(i,j+1) + yp0(j+1) * h + &
+                               & 1.0_8/2.0_8 * yp1(j+1) * h**2 + &
+                               & 1.0_8/6.0_8 * yp2(j+1) * h**3
+                    !
+                end do
+                !
+            end do l1
+            !
+            return
+        end subroutine taylor2
+end module

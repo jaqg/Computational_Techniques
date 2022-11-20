@@ -15,12 +15,15 @@ SUBPATH=subroutines
 SUBSRC=$(shell ls $(SUBPATH)/*.f90)
 SUBOBJ=${SUBSRC:.f90=.o}
 #
+# IMPORTANT NOTE: NAME OF THE MODULE MUST = NAME OF FILE
+# If it is not the case, change the definition of $(MODMOD) as
+# MODMOD=mymodule1.mod mymodule2.mod ...
 MODPATH=modules
 MODSRC=$(shell ls $(MODPATH)/*.f90)
 MODOBJ=${MODSRC:.f90=.o}
 MODMOD=${MODSRC:.f90=.mod}
 #
-SRC=$(SUBSRC) $(MODSRC) $(MODMOD) $(MAINPROG)
+SRC=$(SUBSRC) $(MODSRC) $(MAINPROG)
 OBJ=${SRC:.f90=.o}
 #
 AR=ar rcs
@@ -31,7 +34,6 @@ GRAPHDIR=graph
 GRAPHPROG=$(GRAPHDIR)/graph.py
 ALLGRAPHS=$(shell ls $(GRAPHDIR)/*.py)
 GRAPHDATA=$(GRAPHDIR)/out-graph.dat
-
 #
 # Main compilation
 #
@@ -40,15 +42,16 @@ GRAPHDATA=$(GRAPHDIR)/out-graph.dat
 #
 # Create main executable
 #
-$(MAINEX): $(OBJ) $(LIB)
+$(MAINEX): $(OBJ) $(MODMOD) $(LIB)
 	$(FC) $(FFLAGS) -o $@ $(MODOBJ) $(MAINOBJ) -L./$(LIBPATH) -l$(LIB)
 #
 # Compile modules
 #
-$(MODMOD): $(MODSRC)
-	$(FC) $(FFLAGS) -o $(MODOBJ) -c $< -J $(MODPATH)
+%.mod: %.f90
+	$(FC) $(FFLAGS) -c $^ -J $(MODPATH)
+	@mv ${^F:.f90=.o} $(MODPATH)
 #
-# `make lib` to create/update library
+# Create/update library
 #
 $(LIB): $(SUBOBJ)
 	$(AR) lib$(LIB).a $^
@@ -70,4 +73,4 @@ cleanplots:
 # Clean
 #
 clean:
-	@rm -f lib$(LIB).a *.mod *.o $(SUBOBJ) main
+	@rm -f lib$(LIB).a $(MODMOD) $(OBJ) *.o main

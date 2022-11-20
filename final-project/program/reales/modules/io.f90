@@ -9,8 +9,8 @@ module IO
     !
     implicit none
     !
-    !
-    ! The data is stored in the array 'y' of 'nsp' (number of species) columns.
+    ! The data is stored in the array 'y' of 'nsp' (number of species by pairs
+    ! prey/predator and/or number of initial values x0/y0) columns.
     ! In this case:
     !
     ! y(i,1) -> prey
@@ -21,6 +21,7 @@ module IO
     integer, parameter :: nsp = 2
     real(kind=8), dimension(:), allocatable :: y0
     real(kind=8), dimension(:,:), allocatable :: y, yRk
+    real(kind=8), dimension(:,:), allocatable :: errorRK
     !
     ! We can write the Lotka-Volterra equations as:
     !
@@ -45,11 +46,47 @@ module IO
     !
     ! Dummy variables
     !
-    character(len=80) :: themodel, themethod
+    character(len=80) :: themodel, themethod, theerror
     real(kind=8) :: MEthreshold
-    integer(kind=8) :: TaylorTerms
+    integer :: TaylorTerms
     real(kind=8) :: t0, h, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
+    !
+    ! External procedures
+    !
+    interface
+        !
+        function func(t, y) result(res)
+            implicit none
+            real(kind=8), optional, intent(in) :: t
+            real(kind=8), dimension(:), intent(in) :: y
+            real(kind=8), dimension(:), allocatable :: res
+        end function func
+        !
+        subroutine methods(f, y0, t0, tf, h, t, y)
+            implicit none
+            procedure(func) :: f
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+        end subroutine methods
+        !
+        subroutine methods2(f, y0, t0, tf, h, threshold, t, y)
+            implicit none
+            procedure(func) :: f
+            real(kind=8), dimension(:), intent(in) :: y0
+            real(kind=8), intent(in) :: t0, tf, h, threshold
+            real(kind=8), dimension(:), allocatable, intent(out) :: t
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
+        end subroutine methods2
+        !
+        subroutine abserror(x, y, theerr)
+            implicit none
+            real(kind=8), dimension(:,:), allocatable, intent(in) :: x, y
+            real(kind=8), dimension(:,:), allocatable, intent(out) :: theerr
+        end subroutine abserror
+    end interface
     !
     ! Procedures
     !
@@ -112,6 +149,12 @@ module IO
             read(uf,*)
             read(uf,*) predator0
             !
+            ! Compute the error vs RK4?
+            !
+            read(uf,*)
+            read(uf,*) theerror
+            theerror = trim(theerror)
+            !
             ! Constant ALPHA
             !
             read(uf,*)
@@ -147,7 +190,6 @@ module IO
         end subroutine read_input
         !
         subroutine allocate_arrays(n)
-        ! subroutine allocate_arrays
             !
             ! Subroutine to allocate arrays
             !
@@ -156,21 +198,14 @@ module IO
             integer(kind=8), intent(in) :: n
             integer :: ierr
             !
-            allocate(t(n), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of t'
+            ! allocate(t(n), stat=ierr)
+            ! if (ierr .ne. 0) stop 'IO.f90: Error in allocation of t'
             !
             allocate(params(nterms,nsp), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of params'
             !
             allocate(y0(nsp), stat=ierr)
             if (ierr .ne. 0) stop 'IO.f90: Error in allocation of y0'
-            !
-            ! allocate(y(n,nsp), stat=ierr)
-            ! if (ierr .ne. 0) stop 'IO.f90: Error in allocation of y'
-            !
-            !TODO: eliminar cuando incluya la subrutina de RK
-            allocate(yRK(n,nsp), stat=ierr)
-            if (ierr .ne. 0) stop 'IO.f90: Error in allocation of yRK'
             !
             return
         end subroutine allocate_arrays
@@ -202,10 +237,6 @@ module IO
             !
             y0(1) = prey0
             y0(2) = predator0
-            ! y(1,1)   = prey0
-            ! y(1,2)   = predator0
-            ! yRK(1,1) = prey0
-            ! yRK(1,2) = predator0
             !
             return
         end subroutine assign_params
@@ -227,7 +258,8 @@ module IO
             !
             ! Formats
             !
-            999 format('------------------------------------------------')
+            999 format(79("-"))
+            998 format(47("-"))
             899 format(a, 1x, f10.6)
             !
             write(uf,'(20x,a)') '+-------------------------------------+'
@@ -282,23 +314,43 @@ module IO
             write(uf,'(a,1x,i0)') 'Number of iterations:', final_n
             write(uf,'(a,1x,f15.2)') 'Total time of simulation:', t(final_n)
             write(uf,*)
-            write(uf,999)
-            write(uf,'(33x,a)') themethod
-            write(uf,'(24x,a)') '-----------------------'
-            write(uf,'(11x, "t", 12x, "Prey", 11x, "Predator")')
+            if (theerror == "yes" .or. theerror == "Yes") then
+                write(uf,999)
+                write(uf,'(33x,a,21x,a)') trim(themethod), 'Error vs RK4'
+                write(uf,'(24x,23("-"),8x,23("-"))')
+                write(uf,'(11x,"t",12x,"Prey",11x,"Predator",8x, &
+                        & "Prey",11x,"Predator")')
+                write(uf,999)
+            else
+                write(uf,998)
+                write(uf,'(33x,a)') trim(themethod)
+                write(uf,'(24x,23("-"))')
+                write(uf,'(11x,"t",12x,"Prey",11x,"Predator")')
+                write(uf,998)
+            end if
+            write(uf2,'(a)') themodel
             write(uf2,'(a)') themethod
-            write(uf2,*) 't, prey, predator'
-            write(uf,999)
+            write(uf2,*) 't, prey, predator; prey (RK4), predator (RK4); &
+                        & error (prey), error (pred)'
             !
             lw1: do i = 1, final_n
-                write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp )
-                ! write(uf2,'(*(f15.2))') t(i), ( y(i,j), j=1,nsp )
-                write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
-                                            & ( yRK(i,j), j=1,nsp )
+                !
+                if (theerror == "yes" .or. theerror == "Yes") then
+                    write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp ), &
+                                               & ( errorRK(i,j), j=1,nsp )
+                    write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
+                                     & ( yRK(i,j), j=1,nsp ), &
+                                     & ( errorRK(i,j), j=1,nsp )
+                else
+                    write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp )
+                    write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
+                                     & ( yRK(i,j), j=1,nsp )
+                end if
+                !
             end do lw1
             !
             close(uf)
             close(uf2)
-            return
+        return
         end subroutine write_output
 end module

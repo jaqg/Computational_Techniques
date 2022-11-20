@@ -43,7 +43,7 @@ function LV(t, y) result(res)
     !
     ! Dumb use of t to remove warning: "unused variable"
     !
-    if(.false.) print *, t
+    if(.false.) write(*,*) t
     !
     ! Allocate 'res'
     !
