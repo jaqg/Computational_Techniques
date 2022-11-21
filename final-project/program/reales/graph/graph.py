@@ -26,7 +26,7 @@ with open(fichero_datos, 'r') as file:
     model = file.readline().strip()
     method = file.readline().strip()
 file.close()
-t, prey, predator, preyRK, predatorRK = np.loadtxt(fichero_datos, unpack=True, skiprows=3)
+t, prey, predator, preyRK, predatorRK, errPrey, errPred = np.loadtxt(fichero_datos, unpack=True, skiprows=3)
 
 #
 # Plot

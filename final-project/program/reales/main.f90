@@ -28,13 +28,22 @@ program final_project
     procedure(func) :: LV
     procedure(methods) :: Euler, RK4
     procedure(methods2) :: modEuler
+    procedure(error) :: abserror, relerror
     !
     ! ========================= START OF THE PROGRAM =========================
     !
+    write(*,'(a)') '+-------------------------------------+'
+    write(*,'(a)') '|        Program final_project        |'
+    write(*,'(a)') '| Author: Jose Antonio Quinonero Gris |'
+    write(*,'(a)') '+-------------------------------------+'
+    write(*,*)
     !
     ! --- Read input ---
     !
     call read_input
+    !
+    write(*,'(2a)') 'The model is: ', themodel
+    write(*,'(2a)') 'The method is: ', themethod
     !
     ! Number of (time) steps
     !
@@ -48,47 +57,50 @@ program final_project
     !
     call assign_params
     !
+    ! Guess time step
+    !
+    call guess_h(y0(2), 1000, 1.0D1, alpha, params(2,2), hguess)
+    write(*,'(a, f10.4)') 'The recommended time step, h, is:', hguess
+    write(*,*)
+    !
     ! Main calculation
     !
     ! Calculate Runge-Kutta for comparison
     !
-    call RK4( LV, y0, t0, tf, h, t, yRK )
+    call RK4( LV, y0, t0, tf, h, sol%t, sol%yRK )
     !
     if (themethod == "Euler" .or. themethod == "E") then
         !
-        call Euler( LV, y0, t0, tf, h, t, y )
+        call Euler( LV, y0, t0, tf, h, sol%t, sol%y )
         !
     elseif (themethod == "ModEuler" .or. themethod == "ME") then
         !
-        call modEuler( LV, y0, t0, tf, h, MEthreshold, t, y )
+        call modEuler( LV, y0, t0, tf, h, MEthreshold, sol%t, sol%y )
         !
     elseif (themethod == "Taylor" .or. themethod == "T") then
         !
-        call Taylor(y0, t0, tf, h, TaylorTerms, t, y)
+        call Taylor(y0, t0, tf, h, TaylorTerms, sol%t, sol%y)
         !
     elseif (themethod == "Runge-Kutta" .or. themethod == "RK4") then
         !
-        y = yRK
+        sol%y = sol%yRK
         !
     else
         write(*,*) 'main.f90 ERROR: wrong method input'
         !
     end if
     !
-    ! Calculate the error (if desired)
+    ! Calculate the error
     !
-    if (theerror == "yes" .or. theerror == "Yes") then
-        !
-        call abserror(y, yRK, errorRK)
-        !
-    end if
+    ! call abserror(sol%y, sol%yRK, sol%errorRK)
+    call relerror(sol%y, sol%yRK, sol%errorRK)
     !
     ! If any individual becomes <0, stop
     !
-    cl1: do i = 1, size(y,1)
+    cl1: do i = 1, size(sol%y,1)
         !
-        do j = 1, size(y,2)
-            if ( y(i,j) < 0 ) then
+        do j = 1, size(sol%y,2)
+            if ( sol%y(i,j) < 0 ) then
                 write(*,'(2(a,i0),a)') 'i = ', i, ', j = ', j, ', y<0, exiting'
                 exit cl1
             end if
@@ -102,6 +114,14 @@ program final_project
     !
     call write_output(n,final_n)
     !
-    write(*,*) 'Program compiled successfully.'
+    write(*,'(a)') 'Program compiled successfully.'
+    write(*,'(a)') "Results stored in 'output.dat'"
+    write(*,*)
+    write(*,'(a)') "You can plot the results with 'make plot' or"
+    write(*,'(a)') "'make allplots', and visualize them in graph/*.pdf"
+    write(*,*)
+    write(*,'(a)') 'Bye!'
+    write(*,*)
+    !
     stop
 endprogram final_project

@@ -14,6 +14,7 @@ import os
 #
 # Style
 #
+colores=['#E69F00', '#56B4E9', '#009E73', '#0072B2', '#D55E00', '#CC79A7', '#F0E442']
 style_file = 'mine.mplstyle'
 style_file = os.path.dirname(__file__)+'/{}'.format(style_file)
 plt.style.use(style_file)
@@ -27,25 +28,59 @@ with open(fichero_datos, 'r') as file:
     model  = file.readline().strip()
     method = file.readline().strip()
 file.close()
-t, prey, predator, preyRK, predatorRK = np.loadtxt(fichero_datos, unpack=True, skiprows=3)
+t, prey, predator, preyRK, predatorRK, errPrey, errPred = np.loadtxt(fichero_datos, unpack=True, skiprows=3)
 
 #
 # Plot
 #
-fig, ax = plt.subplots()
+fig, axs = plt.subplots(2,2, sharex=True, figsize=(7.2*1.5,4.45*1.5))
 fig.subplots_adjust(left=.15, bottom=.16, right=.99, top=.97)
 
-ax.plot( t, predatorRK, lw=1.0, color='k', label='$x$ (RK4)' )
-ax.plot( t, preyRK    , lw=1.0, ls='--', color='k', label='$y$ (RK4)' )
-ax.plot( t, predator  , label='$x$ ({})'.format(method) )
-ax.plot( t, prey      , ls='--', label='$y$ ({})'.format(method) )
+fig.suptitle(r'Lotka-Volterra {} model: Foxes ($x$) vs Rabbits ($y$)'.format(model))
+
+#
+# First plot
+#
+ax = axs[0,0]
+ax.plot( t, predatorRK, lw=1.0, color='k',        label='$x$ (RK4)' )
+ax.plot( t, predator,           color=colores[0], label='$x$ ({})'.format(method) )
 
 ax.set(
-        title=r'Lotka-Volterra {} model: Foxes ($x$) vs Rabbits ($y$)'.format(model),
-        # title=r'Lotka-Volterra model (Foxes $x_0 = {x0:.0f}$, Rabbits $y_0 = {y0:.0f}$)'\
-       # .format(x0=predator[0], y0=prey[0]),
+        ylabel=r'Population'
+      )
+
+ax.legend(loc='upper left', ncol=1)
+
+#
+# Second plot
+#
+ax = axs[0,1]
+ax.plot( t, preyRK, lw=1.0, color='k',        label='$y$ (RK4)' )
+ax.plot( t, prey,           color=colores[1], label='$y$ ({})'.format(method) )
+
+ax.legend(loc='upper left', ncol=1)
+
+#
+# Third plot
+#
+ax = axs[1,0]
+ax.plot( t, errPred, color=colores[4], label='$\Delta x/x_{\mathrm{RK4}}$' )
+
+ax.set(
        xlabel=r'$t$ (arbitrary units)',
-       ylabel=r'Population'
+       ylabel=r'Relative Error vs RK4'
+      )
+
+ax.legend(loc='upper left', ncol=1)
+
+#
+# Fourth plot
+#
+ax = axs[1,1]
+ax.plot( t, errPrey, color=colores[3], label='$\Delta y/y_{\mathrm{RK4}}$' )
+
+ax.set(
+       xlabel=r'$t$ (arbitrary units)'
       )
 
 ax.legend(loc='upper left', ncol=1)

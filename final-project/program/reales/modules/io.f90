@@ -49,8 +49,17 @@ module IO
     character(len=80) :: themodel, themethod, theerror
     real(kind=8) :: MEthreshold
     integer :: TaylorTerms
-    real(kind=8) :: t0, h, tf, prey0, predator0
+    real(kind=8) :: t0, h, hguess, tf, prey0, predator0
     real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
+    !
+    ! Derived data type for the solution
+    !
+    type solution
+        real(kind=8), dimension(:), allocatable :: t
+        real(kind=8), dimension(:,:), allocatable :: y, yRK, errorRK
+    end type solution
+    !
+    type(solution) :: sol
     !
     ! External procedures
     !
@@ -81,11 +90,11 @@ module IO
             real(kind=8), dimension(:,:), allocatable, intent(out) :: y
         end subroutine methods2
         !
-        subroutine abserror(x, y, theerr)
+        subroutine error(x, y, theerr)
             implicit none
             real(kind=8), dimension(:,:), allocatable, intent(in) :: x, y
             real(kind=8), dimension(:,:), allocatable, intent(out) :: theerr
-        end subroutine abserror
+        end subroutine error
     end interface
     !
     ! Procedures
@@ -312,7 +321,7 @@ module IO
             !
             write(uf,'(a)') 'Results:'
             write(uf,'(a,1x,i0)') 'Number of iterations:', final_n
-            write(uf,'(a,1x,f15.2)') 'Total time of simulation:', t(final_n)
+            write(uf,'(a,1x,f15.2)') 'Total time of simulation:',sol%t(final_n)
             write(uf,*)
             if (theerror == "yes" .or. theerror == "Yes") then
                 write(uf,999)
@@ -336,16 +345,15 @@ module IO
             lw1: do i = 1, final_n
                 !
                 if (theerror == "yes" .or. theerror == "Yes") then
-                    write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp ), &
-                                               & ( errorRK(i,j), j=1,nsp )
-                    write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
-                                     & ( yRK(i,j), j=1,nsp ), &
-                                     & ( errorRK(i,j), j=1,nsp )
+                    write(uf,'(*(f15.3))') sol%t(i), ( sol%y(i,j), j=1,nsp ), &
+                                               & ( sol%errorRK(i,j), j=1,nsp )
                 else
-                    write(uf,'(*(f15.3))') t(i), ( y(i,j), j=1,nsp )
-                    write(uf2,*) t(i), ( y(i,j), j=1,nsp ), &
-                                     & ( yRK(i,j), j=1,nsp )
+                    write(uf,'(*(f15.3))') sol%t(i), ( sol%y(i,j), j=1,nsp )
                 end if
+                !
+                write(uf2,*) sol%t(i), ( sol%y(i,j), j=1,nsp ), &
+                                     & ( sol%yRK(i,j), j=1,nsp ), &
+                                     & ( sol%errorRK(i,j), j=1,nsp )
                 !
             end do lw1
             !

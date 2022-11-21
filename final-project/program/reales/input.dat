@@ -9,7 +9,7 @@ Euler
 # Initial time of the simulation (t_0)
 0.0
 # Time step (h)
-0.005
+0.0058
 # Time of the simulation
 160.0
 # Initial population of PREY (y_0)
@@ -17,7 +17,7 @@ Euler
 # Initial population of PREDATOR (x_0)
 10.0
 # Compute the error with respect to 4th order Runge-Kutta [yes/no]
-no
+yes
 # Constant ALPHA
 0.4
 # Constant ALPHA PRIME
