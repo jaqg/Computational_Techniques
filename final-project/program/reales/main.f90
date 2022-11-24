@@ -16,14 +16,13 @@ program final_project
     !
     ! Modules
     !
+    use interface_block
     use IO
     use Taylor_module
     !
     ! Variable definition
     !
     implicit none
-    !
-    integer(kind=8) :: i, j, n, final_n
     !
     procedure(func) :: LV
     procedure(methods) :: Euler, RK4
@@ -51,7 +50,7 @@ program final_project
     !
     ! Allocate arrays
     !
-    call allocate_arrays(n)
+    call allocate_arrays
     !
     ! Assign needed parameters/variables
     !
@@ -97,18 +96,7 @@ program final_project
     !
     ! If any individual becomes <0, stop
     !
-    cl1: do i = 1, size(sol%y,1)
-        !
-        do j = 1, size(sol%y,2)
-            if ( sol%y(i,j) < 0 ) then
-                write(*,'(2(a,i0),a)') 'i = ', i, ', j = ', j, ', y<0, exiting'
-                exit cl1
-            end if
-        end do
-        !
-        final_n = i
-        !
-    end do cl1
+    call check_neg_prob(sol%y, final_n)
     !
     ! Write results
     !
@@ -117,7 +105,7 @@ program final_project
     write(*,'(a)') 'Program compiled successfully.'
     write(*,'(a)') "Results stored in 'output.dat'"
     write(*,*)
-    write(*,'(a)') "You can plot the results with 'make plot' or"
+    write(*,'(a)') "You can plot the results with 'make plot' (single plot) or"
     write(*,'(a)') "'make allplots', and visualize them in graph/*.pdf"
     write(*,*)
     write(*,'(a)') 'Bye!'

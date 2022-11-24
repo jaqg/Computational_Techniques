@@ -1,0 +1,171 @@
+% _____________________________________________________________________________
+% *****************************************************************************
+% Autor: José Antonio Quiñonero Gris
+% Fecha de creación: Friday 20:00:58 28-10-2022
+% *****************************************************************************
+% -----------------------------------------------------------------------------
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{amsmath, amssymb}
+
+\input{/home/jose/Documents/latex/preamble/paquetes1} %mis paquetes
+\input{/home/jose/Documents/latex/preamble/bibliography_config} %configuracion para l bibliografia
+\input{/home/jose/Documents/latex/preamble/paquetesTikz} %mis paquetes
+\input{/home/jose/Documents/latex/preamble/tikzstyle} %Estilo para las gráficas
+
+\decimalpoint
+
+% \graphicspath{{../figuras/}}
+
+\author{José Antonio Quiñonero Gris}
+\title{
+    \textbf{Notes on Final project}
+      }
+
+% \date{\today}
+
+\date{
+November 21, 2022
+}
+
+\begin{document}
+\maketitle
+
+% #############################################################################
+% --- INICIO DEL DOCUMENTO ---
+% #############################################################################
+
+Considering the Lotka-Volterra equations:
+\begin{align}
+    \dfrac{\dd{x}}{\dd{t}} &= - \alpha x + \alpha' x^2 + \beta x y \\
+    \dfrac{\dd{y}}{\dd{t}} &= \kappa y - \kappa' y^2 - \lambda x y
+\end{align}
+
+we can write them as
+\begin{equation}\label{ec:main}
+    \dfrac{\dd{y}}{\dd{t}} = y' = a y + b y^2 + c x y = y_1' + y_2' + y_3'
+\end{equation}
+following the logistic model. If $\alpha' = \kappa' = 0$, then we get the simple model.
+
+For the Taylor method, we need to compute the successive derivatives. In order to find an expression that we can compute, let's first write the first derivatives by hand. To do so, we have to follow the chain rule
+\begin{equation}
+    \dfrac{ \dd{y'} }{\dd{t}} = \dfrac{\dd{f(x,y)}}{\dd{t}} = \frac{\partial f}{\partial x} \frac{\partial x}{\partial t} + \frac{\partial f}{\partial y} \frac{\partial y}{\partial t}
+\end{equation}
+so
+\begin{equation}
+    \dfrac{ \dd{y'} }{\dd{t}} = y^{(2)} =
+    \underbrace{\frac{\partial y_1'}{\partial x} \frac{\partial x}{\partial t} + \frac{\partial y_1'}{\partial y} \frac{\partial y}{\partial t}}_{y_1^{(2)}} +
+    \underbrace{\frac{\partial y_2'}{\partial x} \frac{\partial x}{\partial t} + \frac{\partial y_2'}{\partial y} \frac{\partial y}{\partial t}}_{y_2^{(2)}} +
+    \underbrace{\frac{\partial y_3'}{\partial x} \frac{\partial x}{\partial t} + \frac{\partial y_3'}{\partial y} \frac{\partial y}{\partial t}}_{y_3^{(2)}}
+\end{equation}
+where $y^{(n)}$ is the $n$-th derivative of $y$ with respect to $t$.
+
+I am going to calculate the derivatives of each $y_i$ term separately. The first is:
+\begin{align*}
+    y_1^{(1)} &= ay \\
+    y_1^{(2)} &= ay^{(1)} \\
+    y_1^{(3)} &= ay^{(2)} \\
+    y_1^{(4)} &= ay^{(3)} \\
+    y_1^{(5)} &= ay^{(4)}
+\end{align*}
+so we can easily see that
+\begin{equation}\label{ec:primer_termino}
+    y_1^{(n+1)} = a y^{(n)}
+\end{equation}
+
+Let's skip the second term for now and focus on the third one, $y_3$:
+
+\begin{align*}
+    y_3^{(1)} &= c x y \\
+    y_3^{(2)} &= c \left[ x y^{(1)} + x^{(1)} y \right] \\
+    y_3^{(3)} &= c \left[ x y^{(2)} + 2 x^{(1)} y^{(1)} + x^{(2)} y \right] \\
+    y_3^{(4)} &= c \left[ x y^{(3)} + 3 x^{(1)} y^{(2)} + 3 x^{(2)} y^{(1)} + x^{(3)} y \right] \\
+    y_3^{(5)} &= c \left[ x y^{(4)} + 4 x^{(1)} y^{(3)} + 6 x^{(2)} y^{(2)} + 4 x^{(3)} y^{(1)} + x^{(4)} y \right]
+\end{align*}
+
+I didn't found it so trivial to find a general expresion for $y_3^{(n)}$. The approach I followed was, first, to write the terms inside brackets in columns, ordering them by increasing $(n)$ of $y^{(n)}$, as
+\begin{alignat*}{3}
+    y_3^{(1)} &= c x y \\
+    y_3^{(2)} &= c \left[ x^{(1)} y + x y^{(1)}  \right] \\
+    y_3^{(3)} &= c \left[ x^{(2)} y + 2 x^{(1)} y^{(1)} + x y^{(2)}  \right] \\
+    y_3^{(4)} &= c \left[ x^{(3)} y + 3 x^{(2)} y^{(1)} + 3 x^{(1)} y^{(2)} + x y^{(3)} \right] \\
+    y_3^{(5)} &= c \left[ x^{(4)} y + 4 x^{(3)} y^{(1)} + 6 x^{(2)} y^{(2)} + 4 x^{(1)} y^{(3)} + x y^{(4)} \right]
+\end{alignat*}
+or, including the zero terms to make it more visual
+\begin{alignat*}{5}
+    y_3^{(1)} &= c \left[ 1 x y       \right. &&+ 0 x y^{(1)}       &&+ 0 x y^{(2)}       &&+ 0 x y^{(3)}       &&+ \left. 0 x y^{(4)} \right] \\
+    y_3^{(2)} &= c \left[ 1 x^{(1)} y \right. &&+ 1 x y^{(1)}       &&+ 0 x y^{(2)}       &&+ 0 x y^{(3)}       &&+ \left. 0 x y^{(4)} \right] \\
+    y_3^{(3)} &= c \left[ 1 x^{(2)} y \right. &&+ 2 x^{(1)} y^{(1)} &&+ 1 x y^{(2)}       &&+ 0 x y^{(3)}       &&+ \left. 0 x y^{(4)} \right] \\
+    y_3^{(4)} &= c \left[ 1 x^{(3)} y \right. &&+ 3 x^{(2)} y^{(1)} &&+ 3 x^{(1)} y^{(2)} &&+ 1 x y^{(3)}       &&+ \left. 0 x y^{(4)} \right] \\
+    y_3^{(5)} &= c \left[ 1 x^{(4)} y \right. &&+ 4 x^{(3)} y^{(1)} &&+ 6 x^{(2)} y^{(2)} &&+ 4 x^{(1)} y^{(3)} &&+ \left. 1 x y^{(4)} \right]
+\end{alignat*}
+
+We can write the coefficients of each column in a table, writing each $i$-th row for the $i$-th derivative, $y^{(i)}$, which depends on the $j$-th derivative, $y^{(j)}$, column $j$-th, by the coefficient $i,j$.
+\begin{table}[h!]
+    \ra{1.2} % Spacing btween lines of table
+    % \caption{}
+    \label{tab:coeficientes}
+    \centering
+    \begin{tabular}{@{}c|ccccc@{}}
+                  & $y$ & $y^{(1)}$ & $y^{(2)}$ & $y^{(3)}$ & $y^{(4)}$ \\
+        \midrule
+        % $y$       & 1   & 0         & 0         & 0         & 0         \\
+        $y^{(1)}$ & 1   & 0         & 0         & 0         & 0         \\
+        $y^{(2)}$ & 1   & 1         & 0         & 0         & 0         \\
+        $y^{(3)}$ & 1   & 2         & 1         & 0         & 0         \\
+        $y^{(4)}$ & 1   & 3         & 3         & 1         & 0         \\
+        $y^{(5)}$ & 1   & 4         & 6         & 4         & 1         \\
+                  & \multicolumn{5}{@{}l@{}}{\hspace{5pt}%
+                      \raisebox{.5\normalbaselineskip}{%
+                      \rlap{$\underbrace{\hphantom{\mbox{%
+                        $y$%
+                \hspace*{\dimexpr4\arraycolsep+\arrayrulewidth}%
+                        $y^{(1)}$%
+                \hspace*{\dimexpr4\arraycolsep+\arrayrulewidth}%
+                        $y^{(2)}$%
+                \hspace*{\dimexpr4\arraycolsep+\arrayrulewidth}%
+                        $y^{(3)}$%
+                                                        }}}_{\mat{C}}$}}%
+                    }
+    \end{tabular}
+\end{table}
+
+We can create a coefficient matrix $\mat{C}$, which can be computed as
+\begin{equation}
+    \mat{C}(i+1, j+1) = \mat{C}(i,j) + \mat{C}(i,j+1), \qquad 0 \le i,j \le N-1
+\end{equation}
+for the first $N$ derivatives
+(Note: I'm considering the first element of the matrix is $\mat{C}_{0,0} \equiv \mat{C}(0,0)$, indexing as coded in Fortran).
+
+And then, write the third term as
+\begin{equation}\label{ec:tercer_termino}
+    y_3^{(n+1)} = c \sum_{k=0}^{n} \mat{C}_{n,k}\, x^{(n-k)} y^{(k)}
+\end{equation}
+
+An improvement would be to write $\mat{C}_{i,j}$ in terms of $n$, but I didn't find a way in a first look, so I'm leaving this at it is.
+
+Now, I go back to the second term, $y_2$, the last one to compute. If instead of writing it as $y_2 = by^2$ we write it as $y_2 = byy$, it has the same form of $y_3$ but substituting $x$ for $y$. Then, just to simplify the code, I won't apply the commutative law for multiplication and calculate the derivatives as in the previous example. Then
+\begin{alignat*}{3}
+    y_2^{(1)} &= b y y \\
+    y_2^{(2)} &= b \left[ y^{(1)} y +   y y^{(1)}  \right] \\
+    y_2^{(3)} &= b \left[ y^{(2)} y + 2 y^{(1)} y^{(1)} +   y y^{(2)}  \right] \\
+    y_2^{(4)} &= b \left[ y^{(3)} y + 3 y^{(2)} y^{(1)} + 3 y^{(1)} y^{(2)} +   y y^{(3)} \right] \\
+    y_2^{(5)} &= b \left[ y^{(4)} y + 4 y^{(3)} y^{(1)} + 6 y^{(2)} y^{(2)} + 4 y^{(1)} y^{(3)} + y y^{(4)} \right]
+\end{alignat*}
+
+So the we can employ same formulation as before and the write $y_2$ as
+\begin{equation}\label{ec:segundo_termino}
+    y_2^{(n+1)} = b \sum_{k=0}^{n} \mat{C}_{n,k}\, y^{(n-k)} y^{(k)}
+\end{equation}
+
+Finally, putting together eqs. \eqref{ec:primer_termino}, \eqref{ec:segundo_termino} and \eqref{ec:tercer_termino}, I compute the derivatives as
+\begin{align}
+    y^{(n+1)} &= y_1^{(n+1)} + y_2^{(n+1)} + y_3^{(n+1)} = \\
+              &= a y^{(n)} + b \sum_{k=0}^{n} \mat{C}_{n,k}\, y^{(n-k)} y^{(k)} + c \sum_{k=0}^{n} \mat{C}_{n,k}\, x^{(n-k)} y^{(k)}
+\end{align}
+% #############################################################################
+\end{document}

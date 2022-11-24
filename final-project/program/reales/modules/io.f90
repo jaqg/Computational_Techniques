@@ -7,6 +7,8 @@ module IO
     !
     ! Module to source data to the main program
     !
+    use interface_block
+    !
     implicit none
     !
     ! The data is stored in the array 'y' of 'nsp' (number of species by pairs
@@ -46,6 +48,7 @@ module IO
     !
     ! Dummy variables
     !
+    integer(kind=8) :: n, final_n
     character(len=80) :: themodel, themethod, theerror
     real(kind=8) :: MEthreshold
     integer :: TaylorTerms
@@ -61,42 +64,6 @@ module IO
     !
     type(solution) :: sol
     !
-    ! External procedures
-    !
-    interface
-        !
-        function func(t, y) result(res)
-            implicit none
-            real(kind=8), optional, intent(in) :: t
-            real(kind=8), dimension(:), intent(in) :: y
-            real(kind=8), dimension(:), allocatable :: res
-        end function func
-        !
-        subroutine methods(f, y0, t0, tf, h, t, y)
-            implicit none
-            procedure(func) :: f
-            real(kind=8), dimension(:), intent(in) :: y0
-            real(kind=8), intent(in) :: t0, tf, h
-            real(kind=8), dimension(:), allocatable, intent(out) :: t
-            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
-        end subroutine methods
-        !
-        subroutine methods2(f, y0, t0, tf, h, threshold, t, y)
-            implicit none
-            procedure(func) :: f
-            real(kind=8), dimension(:), intent(in) :: y0
-            real(kind=8), intent(in) :: t0, tf, h, threshold
-            real(kind=8), dimension(:), allocatable, intent(out) :: t
-            real(kind=8), dimension(:,:), allocatable, intent(out) :: y
-        end subroutine methods2
-        !
-        subroutine error(x, y, theerr)
-            implicit none
-            real(kind=8), dimension(:,:), allocatable, intent(in) :: x, y
-            real(kind=8), dimension(:,:), allocatable, intent(out) :: theerr
-        end subroutine error
-    end interface
-    !
     ! Procedures
     !
     contains
@@ -109,7 +76,7 @@ module IO
             !
             integer :: uf
             !
-            open(newunit=uf, file="input.dat", action="read", status='old')
+            open(newunit=uf, file="data/input.dat", action="read", status='old')
             !
             ! Model used
             !
@@ -198,13 +165,12 @@ module IO
             return
         end subroutine read_input
         !
-        subroutine allocate_arrays(n)
+        subroutine allocate_arrays
             !
             ! Subroutine to allocate arrays
             !
             implicit none
             !
-            integer(kind=8), intent(in) :: n
             integer :: ierr
             !
             ! allocate(t(n), stat=ierr)
@@ -262,7 +228,7 @@ module IO
             !
             ! Files
             !
-            open(newunit=uf, file="output.dat")
+            open(newunit=uf, file="data/output.dat")
             open(newunit=uf2, file="graph/out-graph.dat")
             !
             ! Formats
