@@ -32,17 +32,11 @@ module Taylor_module
             !
             integer :: i, j, k, ierr
             real(kind=8) :: xtmp, ytmp
+            real(kind=8), dimension(:), allocatable :: y_1, y_2, y_3
             real(kind=8), dimension(:,:), allocatable :: C
             !
-            ! As we can write the LV equation as
-            !
-            ! f(x,y) = ay + by^2 + cxy = y^{(1)}
-            !
-            ! we calculate the consecutive derivatives y^{(n+1)} as
-            !
-            ! y_t^{(n+1)} = a * y_t^{(n)} +
-            !              + b * (n + 1) * y_t * y_t^{(n)} +
-            !              + c * sum_{k=0}^n C_{nk} y_t^{(n)} x_t^{(n)}
+            ! You can find more information about how I computed the
+            ! derivatives in the 'notes/notes.pdf' document
             !
             ! First, define the coefficients array C
             !
@@ -64,10 +58,19 @@ module Taylor_module
             if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of &
                                   & ders'
             !
+            allocate(y_1(size(y)), stat=ierr)
+            if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of y_1'
+            !
+            allocate(y_2(size(y)), stat=ierr)
+            if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of y_2'
+            !
+            allocate(y_3(size(y)), stat=ierr)
+            if (ierr .ne. 0) stop 'derivatives.f90: Error in allocation of y_3'
+            !
             ! First row of 'ders', ders(1,:) -> x^{(0)} y^{(0)} ... z^{(0)}
             !                                -> y(1)    y(2)    ... y(N)
             !
-            ! ders = 0.0_8
+            ders = 0.0_8
             ders(1,:) = y(:)
             !
             dl1: do i = 1, n-1
@@ -79,31 +82,44 @@ module Taylor_module
                 ! We can compute y_t^{(n+1)} as
                 !
                 ! y_t^{(n+1)} = a * y_t^{(n)} +
-                !              + b * (n + 1) * y_t * y_t^{(n)} +
-                !              + c * sum_{k=0}^n C_{nk} y_t^{(n)} x_t^{(n)}
+                !              + b * sum_{k=0}^n C_{nk} y_t^{(n-k)} y_t^{(k)}
+                !              + c * sum_{k=0}^n C_{nk} x_t^{(n-k)} y_t^{(k)}
                 !
-                ! First, compute the sum
+                ! I compute them separately as y_1, y_2 and y_3
                 !
-                ytmp = 0.0_8 ; xtmp = 0.0_8
-                dl3: do k = 1, i
+                ! y_1
+                !
+                y_1(j)   = params(1,j) * ders(i,j)
+                y_1(j+1) = params(1,j+1) * ders(i,j+1)
+                !
+                ! y_2
+                !
+                ytmp = 0.0_8
+                xtmp = 0.0_8
+                dly2: do k = 1, i
+                    ytmp = ytmp + C(i,k) * ders(k,j) * ders(i-k+1,j)
+                    xtmp = xtmp + C(i,k) * ders(k,j+1) * ders(i-k+1,j+1)
+                end do dly2
+                !
+                y_2(j)   = params(2,j) * ytmp
+                y_2(j+1) = params(2,j+1) * xtmp
+                !
+                ! y_3
+                !
+                ytmp = 0.0_8
+                xtmp = 0.0_8
+                dly3: do k = 1, i
                     ytmp = ytmp + C(i,k) * ders(k,j) * ders(i-k+1,j+1)
                     xtmp = xtmp + C(i,k) * ders(k,j+1) * ders(i-k+1,j)
-                end do dl3
+                end do dly3
                 !
-                ! Finally, add everything with the corresponding parameters
+                y_3(j)   = params(3,j) * ytmp
+                y_3(j+1) = params(3,j+1) * xtmp
                 !
-                ! Note: as y_t^{(i+1)} -> ders(i+2), then when computing
-                ! ders(i+1) the term
-                ! b * (i+1) * y_t * y_t^{(i)} -> b * (i+1) * y_t * ders(i+2)
-                !                             -> b * i * y_t * ders(i+1)
+                ! Finally, add everything
                 !
-                ders(i+1,j) = params(1,j) * ders(i,j) + &
-                            & params(2,j) * dble(i) * y(j) * ders(i,j) + &
-                            & params(3,j) * ytmp
-                !
-                ders(i+1,j+1) = params(1,j+1) * ders(i,j+1) + &
-                         & params(2,j+1) * dble(i) * y(j+1) * ders(i,j+1) + &
-                         & params(3,j+1) * xtmp
+                ders(i+1,j) = y_1(j) + y_2(j) + y_3(j)
+                ders(i+1,j+1) = y_1(j+1) + y_2(j+1) + y_3(j+1)
                 !
                 end do dl2
             end do dl1

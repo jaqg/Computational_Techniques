@@ -106,7 +106,7 @@ program final_project
     write(*,'(a)') "Results stored in 'output.dat'"
     write(*,*)
     write(*,'(a)') "You can plot the results with 'make plot' (single plot) or"
-    write(*,'(a)') "'make allplots', and visualize them in graph/*.pdf"
+    write(*,'(a)') "'make allplots', and visualize them in graph/plots/*.pdf"
     write(*,*)
     write(*,'(a)') 'Bye!'
     write(*,*)
