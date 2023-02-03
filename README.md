@@ -1,5 +1,5 @@
 # Computational Techniques
-Hola
+
 Computational Techniques and Numerical Calculations.
 
 # Table of Contents
