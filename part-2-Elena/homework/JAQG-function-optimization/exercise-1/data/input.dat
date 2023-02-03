@@ -1,0 +1,6 @@
+# Value of 'a' for the interval [a,b] of the Bolzano's algorithm
+3.0
+# Value of 'b' for the interval [a,b] of the Bolzano's algorithm
+4.0
+# Value of the threshold for convergence
+1D-8

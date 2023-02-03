@@ -1,0 +1,165 @@
+module other_exercises
+    !
+    implicit none
+    !
+    type patient
+        character(len=:), allocatable :: patname
+        character(len=:), allocatable :: famname
+        real(kind=4) :: temp
+        integer :: pulse
+        character(len=:), allocatable :: diagnosis
+    end type patient
+    !
+    contains
+        function int_div(n1, n2) result(res)
+            !
+            ! Converts into an integer by using INT the result of the division
+            ! of two (real) numbers, n1 and n2
+            !
+            implicit none
+            !
+            real(kind=8), intent(in) :: n1, n2
+            integer :: res
+            !
+            res = int(n1/n2)
+            !
+            return
+        end function int_div
+        !
+        function nint_div(n1, n2) result(res)
+            !
+            ! Converts into an integer by using NINT the result of the division
+            ! of two (real) numbers, n1 and n2
+            !
+            implicit none
+            !
+            real(kind=8), intent(in) :: n1, n2
+            integer :: res
+            !
+            res = nint(n1/n2)
+            !
+            return
+        end function nint_div
+        !
+        subroutine exercise2(inunfile, filename, colrow, skiplines, &
+                             outunfile, outform)
+            !
+            ! Subroutine that reads 10 (real) numbers from the #inunfile (int)
+            ! file named "filename", prints in out-unitfile #outunfile those
+            ! bigger than 5.0 and writes -5.0 instead of the numbers lower or
+            ! equal than 5.0.
+            ! With colrow, you can write "col" if the numbers are sorted in a
+            ! column in the input file, or "row" if they are in one single line
+            ! Also, skips #skiplines (int) at the beginning of the file.
+            !
+            implicit none
+            !
+            integer, intent(in) :: inunfile, skiplines, outunfile
+            character(len=*), intent(in) :: filename
+            character(len=3), intent(in) :: colrow
+            character(len=*), intent(in) :: outform
+            character(len=:), allocatable :: actual_format
+            integer :: i
+            real(kind=8), dimension(10) :: numbers
+            !
+            open(unit=inunfile, file=filename, status='old', action='read')
+            !
+            l1: do i = 1, skiplines
+                read(inunfile,*)
+            end do l1
+            !
+            if (colrow == "col") then
+                l2: do i = 1, 10
+                    read(inunfile,*) numbers(i)
+                end do l2
+            else
+                read(inunfile,*) (numbers(i),i=1,10)
+            end if
+            !
+            write(outunfile,*) 'The original numbers are:'
+            if (outform == "*") then
+                do i = 1, 10
+                    write(outunfile,*) numbers(i)
+                end do
+            else
+                actual_format = "(*(" // outform // "))"
+                do i = 1, 10
+                    write(outunfile,actual_format) numbers(i)
+                end do
+            end if
+            !
+            write(outunfile,*)
+            !
+            write(outunfile,*) 'The conditioned numbers are:'
+            if (outform == "*") then
+            !
+                do i = 1, 10
+                    if (numbers(i)<=5.0) then
+                        write(outunfile,*) -5.0
+                    else
+                        write(outunfile,*) numbers(i)
+                    end if
+                end do
+            !
+            else
+            !
+                actual_format = "(*(" // outform // "))"
+                do i = 1, 10
+                    if (numbers(i)<=5.0) then
+                        write(outunfile,actual_format) -5.0
+                    else
+                        write(outunfile,actual_format) numbers(i)
+                    end if
+                end do
+            !
+            end if
+            !
+            write(outunfile,*)
+            !
+            close(inunfile)
+            !
+            return
+        end subroutine exercise2
+        !
+        subroutine ex3_print(pname, header, outfun, outfname, foot)
+            !
+            ! Print the values for each patient to an output file.
+            ! The program must ask whether the data of all or only one of the
+            ! patients is going to be printed and, in the last case, ask for
+            ! the family name of the searched patient.
+            !
+            ! patname (string): patient name
+            ! header (string): print header of table: "yes" or "no"
+            ! outfun (integer): output file unit
+            ! outfname (string): output file name
+            ! foot (string): print foot of table: "yes" or "no"
+            !
+            implicit none
+            !
+            class(patient), intent(in) :: pname
+            character(len=*), intent(in) :: header, foot
+            integer, intent(in) :: outfun
+            character(len=*), intent(in) :: outfname
+            !
+            10 format(1x,a,1x,a,1x,f5.1,3x,i0,5x,a)
+            20 format(1x,a,12x,a,2x,a,2x,a)
+            30 format('-------------------------------------------')
+            !
+            open(unit=outfun, file=outfname, action='write')
+            !
+            if (header == "yes") then
+                write(outfun,30)
+                write(outfun,20) 'Patient', 'T(ºC)', 'Pulse', 'Diagnosis'
+                write(outfun,30)
+            end if
+            !
+            write(outfun,10) pname%patname, pname%famname, pname%temp, &
+                             pname%pulse, pname%diagnosis
+            !
+            if (foot == "yes") then
+                write(outfun,30)
+            end if
+            !
+            return
+        end subroutine ex3_print
+end module

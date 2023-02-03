@@ -1,0 +1,11 @@
+! Dimensions of first matrix nxm (integers), separated with space
+2 3
+! Input first matrix
+5 6 7
+10 1 4
+! Dimensions of second matrix nxm (integers), separated with space
+3 2
+! Input second matrix
+8 5
+3 4
+2 9

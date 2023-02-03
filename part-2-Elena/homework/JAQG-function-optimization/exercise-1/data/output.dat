@@ -1,0 +1,15 @@
+ Value of "a" and "b" of the interval [a,b] and
+ threshold of convergence
+a = 4.00
+b = 3.00
+threshold = 0.1E-07
+
+ The root (x for f(x) approx. 0), is:
+
+ Bisection method:
+x =  3.29658937
+Total number of iterations: 21
+
+ Regula Falsi method:
+x =  3.29658946
+Total number of iterations: 12

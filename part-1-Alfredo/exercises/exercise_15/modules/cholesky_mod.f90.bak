@@ -1,0 +1,138 @@
+module cholesky_mod
+    !
+    implicit none
+    !
+    character(len=44), parameter :: form10 = &
+                                 "('----------------------------------------')"
+    character(len=44), parameter :: form20 = &
+                                 "('========================================')"
+    !
+    contains
+        subroutine cholesky(M, L, file_unit, output_format)
+            !
+            ! Cholesky decomposition subroutine
+            !
+            ! M (matrix) -in-: target matrix to decompose
+            ! M (matrix) -out-: decomposed matrix
+            ! L (matrix): L matrix resulted from decomposition
+            ! file_unit (integer): unit file to print results
+            ! output_format (string): output format
+            !
+            implicit none
+            !
+            real(kind=8), dimension(:,:), intent(inout) :: M
+            real(kind=8), dimension(:,:), intent(inout) :: L
+            integer, intent(in) :: file_unit
+            character(len=*), intent(in) :: output_format
+            character(len=:), allocatable :: actual_format
+            integer :: i, j, k, n, totiter, rankM
+            !
+            n = size(M,1)
+            actual_format = "(*(" // output_format // "))"
+            !
+            write(file_unit,*)
+            write(file_unit,*) '--- START OF CHOLESKY DECOMPOSITION ---'
+            write(file_unit,*)
+            !
+            rankM = 0
+            loopJ: do J=1, n
+                write(file_unit,form20)
+                write(file_unit,'(1x,a,i0)') 'J = ', J
+                write(file_unit,form10)
+                !
+                ! Print the original matrix
+                !
+                write(file_unit,'(1x,a,i0,a)') 'Matrix M^(',J-1,')'
+                lom2: do i = 1, n
+                    write(file_unit,actual_format) ( M(i,k), k=1, n )
+                end do lom2
+                write(file_unit,*)
+                !
+                ! Check if calculation can be done
+                !
+                if (M(J,J) <= 0.0_8) then
+                    if (J /= n) then
+                        write(file_unit,'(" M(",i0,",",i0,")<=0; &
+                                    Cycling to the next vector")') j, j
+                    else
+                        write(file_unit,'(" M(",i0,",",i0,")<=0; &
+                                    No more vectors")') j, j
+                    end if
+
+                    goto 100
+                else
+                    rankM = rankM + 1
+                end if
+                !
+                ! Calculate and print vector L
+                !
+                write(file_unit,'(1x,a,i0)') 'Vector L^',J
+                loopi: do i=1, n
+                    L(i,J) = M(i,J)/sqrt(M(J,J))
+                    write(file_unit,actual_format) L(i,J)
+                end do loopi
+                write(file_unit,*)
+                !
+                ! Update and print matrix M
+                !
+                write(file_unit,'(1x,a,i0,a)') 'New matrix M^(',J,')'
+                loopi2: do i = 1, n
+                    loopk: do k = 1, n
+                        M(i,k) = M(i,k) - L(i,j) * L(k,j)
+                    end do loopk
+                    write(file_unit,actual_format) M(i,:)
+                end do loopi2
+                !
+                ! Check if new matrix M is null
+                !
+                check1: do i = 1, n
+                    check2: do k = 1, n
+                        if (M(i,k).eq.0.0) then
+                            cycle
+                        else
+                            goto 200
+                        end if
+                    end do check2
+                end do check1
+                !
+                exit loopJ
+                !
+                200 continue
+                !
+                totiter = J
+                !
+                100 continue
+                !
+                write(file_unit,form20)
+                write(file_unit,*)
+                !
+            end do loopJ
+            !
+            write(file_unit,*)
+            write(file_unit,*) '--- END OF CHOLESKY DECOMPOSITION ---'
+            write(file_unit,*)
+            !
+            write(file_unit,*) 'RESULTS:'
+            write(file_unit,*)
+            !
+            write(file_unit,'(1x,a,i0)') 'Total iterations: ', totiter
+            write(file_unit,*)
+            !
+            write(file_unit,'(1x,a,i0)') 'Rank M = ', rankM
+            write(file_unit,*)
+            !
+            write(file_unit,*) 'Matrix L:'
+            do i = 1, n
+                write(file_unit,actual_format) L(i,:)
+            end do
+            write(file_unit,*)
+            !
+            write(file_unit,*) 'Reduced matrix M:'
+            do i = 1, n
+                write(file_unit,actual_format) M(i,:)
+            end do
+            write(file_unit,*)
+            !
+            return
+        end subroutine cholesky
+end module

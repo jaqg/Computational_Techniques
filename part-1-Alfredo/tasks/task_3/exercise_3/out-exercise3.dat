@@ -1,0 +1,11 @@
+ +-------------------+
+ | Program exercise3 |
+ +-------------------+
+
+-------------------------------------------
+ Patient            T(ºC)  Pulse  Diagnosis
+-------------------------------------------
+ Jaimito Fernandez  34.5   35     sick
+ Pablito Rodriguez  36.5   60     healthy
+ Paquito Sabajanes  40.5   95     sick
+-------------------------------------------

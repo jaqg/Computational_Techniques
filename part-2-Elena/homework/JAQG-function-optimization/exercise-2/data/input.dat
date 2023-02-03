@@ -1,0 +1,8 @@
+# Value of initial point x_0
+3.0
+# Value of threshold for convergence
+1D-8
+# Method for the finite difference
+Central
+# Value of spacing 'h'
+1D-7

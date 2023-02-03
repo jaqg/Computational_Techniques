@@ -1,0 +1,18 @@
+COMPOSITE RULE
+
+Iter. step       Integral value   Difference
+         1       0.28869048       0.28869048
+         2       0.28793498       0.00075549
+         3       0.28774535       0.00018963
+         4       0.28769790       0.00004746
+         5       0.28768603       0.00001187
+         6       0.28768306       0.00000297
+         7       0.28768232       0.00000074
+         8       0.28768213       0.00000019
+         9       0.28768209       0.00000005
+        10       0.28768208       0.00000001
+
+Number of iterations needed: 11
+Final subinterval value:    0.00048828
+Number of abscissa points: 2048
+Final value of the quadrature:    0.28768207

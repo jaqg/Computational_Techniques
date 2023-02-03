@@ -1,0 +1,8 @@
+# Lower integration limit (real)
+2.0
+# Upper integration limit (real)
+3.0
+# Initial number of subintervals (integer)
+2
+# Threshold of convergence
+1.0D-8

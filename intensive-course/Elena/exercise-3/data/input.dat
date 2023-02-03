@@ -1,0 +1,8 @@
+# Value of initial point x_0 (real, double precision)
+0.5
+# Value of threshold for convergence (real, double precision)
+1D-8
+# Method for the finite difference (string)
+Central
+# Value of spacing 'h' (real, double precision)
+1D-7
