@@ -210,6 +210,39 @@ module jacobi_method
         return
     end subroutine update_mat 
 
+    subroutine update_eigenvec(s, c, p, q, V)
+        implicit none
+        integer, intent(in) :: p, q 
+        real(kind=8), intent(in) :: s, c
+        real(kind=8), dimension(:,:), intent(inout) :: V
+        !
+        integer :: r, n 
+        real(kind=8) :: vrp, vrq 
+        !
+        n = size(V, dim=1)
+        !
+        ! Update elements of the eigenvector matrix after rotation
+        !
+        !   v'_{rs} = v_{rs} (for s/=p and s/=q)
+        !
+        !   v'_{rp} = c v_{rp} - s v_{rq}
+        !   v'_{rq} = s v_{rp} + c v_{rq}
+        !
+        ! where
+        !
+        !   s = sin(phi) ; c = cos(phi)
+        !
+        dl1: do r = 1, n
+            vrp = V(r,p)
+            vrq = V(r,q)
+            !
+            V(r,p) = c * vrp - s * vrq
+            V(r,q) = s * vrp + c * vrq
+        end do dl1
+        !
+        return
+    end subroutine update_eigenvec
+
     subroutine jacobi(A, threshold, v, ev)
         !
         ! 
@@ -262,11 +295,6 @@ module jacobi_method
         ev = 0.0_8
         totiter = 0
         !
-        ! dwv1: do i = 1, n
-        !     write(*,'(*(f4.1))') ( v(i,j), j=1, n )
-        ! end do dwv1
-        !
-        !
         ! Main loop: iterate until the convergence condition is fulfilled
         !
         ml: do
@@ -279,11 +307,6 @@ module jacobi_method
             !
             call abs_max_elems(A, p, q, app, apq, aqp, aqq)
             !
-            ! write(*,*) 'app =', app
-            ! write(*,*) 'apq =', apq
-            ! write(*,*) 'aqp =', aqp
-            ! write(*,*) 'aqq =', aqq
-            !
             ! Check for convergence: check if the largest (absolute value) non-
             ! diagonal element is below the threshold
             !
@@ -292,15 +315,9 @@ module jacobi_method
             write(*,'(a,i0,a)') '--- ITERATION ', totiter, ' ---'
             write(*,*)
             !
-            ! write(*,'("abs_max_elems(A): A(",i0,",",i0,") =", f10.5)') p, q, A(p,q)
-            !
             ! Compute angle phi for the plane rotation
             !
             call phi_plane_rot(app,apq,aqq, phi)
-            !
-            ! write(*,*) 'phi =', phi
-            ! write(*,*) 
-            !
             !
             ! Calculate sin(phi) and cos(phi)
             !
@@ -310,23 +327,29 @@ module jacobi_method
             !
             call update_mat(s, c, p, q, app, apq, aqq, A)
             !
-            write(*,*) 'Updated matrix A'
-            do i = 1, n
-                write(*,'(*(f15.5))') ( A(i,j), j=1, n )
-            end do
-            write(*,*)
+            ! write(*,*) 'Updated matrix A'
+            ! do i = 1, n
+            !     write(*,'(*(f15.5))') ( A(i,j), j=1, n )
+            ! end do
+            ! write(*,*)
             !
             ! Update eigenvector matrix V
             !
-            ! call update_eigenvec(s, c, p, q, app, apq, aqq, A)
+            call update_eigenvec(s, c, p, q, V)
             !
-            write(*,*) 'Updated eigenvector matrix V'
-            do i = 1, n
-                write(*,'(*(f15.5))') ( V(i,j), j=1, n )
-            end do
-            write(*,*)
+            ! write(*,*) 'Updated (and normalised) eigenvector matrix V'
+            ! do i = 1, n
+            !     write(*,'(*(f15.5))') ( V(i,j), j=1, n )
+            ! end do
+            ! write(*,*)
             !
         end do ml
+        !
+        ! Store eigenvalues in array 'ev'
+        !
+        do i = 1, n
+            ev(i) = A(i,i)
+        end do 
         !
         return
     end subroutine jacobi     
