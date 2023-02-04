@@ -22,7 +22,7 @@ module jacobi_method
         !
         return
     end subroutine pi_numb 
-
+    !
     subroutine is_sq_mat(A, ans)
         implicit none
         real(kind=8), dimension(:,:), intent(in) :: A
@@ -36,12 +36,13 @@ module jacobi_method
         !
         return
     end subroutine is_sq_mat 
-
-    subroutine identity_mat(A)
+    !
+    subroutine identity_mat(A, B)
         implicit none
-        real(kind=8), dimension(:,:), intent(inout) :: A
+        real(kind=8), dimension(:,:), intent(in) :: A
+        real(kind=8), dimension(:,:), allocatable, intent(out) :: B
         ! Dummy variables
-        integer :: i, n
+        integer :: i, n, m, ierr 
         logical :: ans
         !
         ! Check if the matrix is squared
@@ -52,20 +53,28 @@ module jacobi_method
             &'jacobi_method.f90 identity_mat: matrix not squared'
         !
         n = size(A, dim=1)
+        m = size(A, dim=2)
+        !
+        ! Allocate output (identity) matrix
+        !
+        allocate(B(n, m), stat=ierr)
+        if (ierr .ne. 0) stop &
+            &'jacobi_method.f90 identity_mat: Error in allocation of B'
+        !
+        B = 0.0_8
         !
         ! Only assign to 1 the diagonal elements
         !
-        A = 0.0_8
         dl1: do i = 1, n
-            A(i,i) = 1.0_8
+            B(i,i) = 1.0_8
         end do dl1
         !
         return
     end subroutine identity_mat 
-
-    subroutine phi_plane_rot(app,apq,aqq, phi)
+    !
+    subroutine phi_plane_rot(app,apq,aqp,aqq, phi)
         implicit none
-        real(kind=8), intent(in) :: app,apq,aqq
+        real(kind=8), intent(in) :: app,apq,aqp,aqq
         real(kind=8), intent(out) :: phi
         ! Dummy variables
         real(kind=8) :: pi 
@@ -102,7 +111,7 @@ module jacobi_method
         !
         return
     end subroutine phi_plane_rot
-        
+    !
     subroutine abs_max_elems(A, p, q, app, apq, aqp, aqq)
         implicit none
         real(kind=8), dimension(:,:), intent(in) :: A
@@ -148,68 +157,7 @@ module jacobi_method
         !
         return
     end subroutine abs_max_elems
-
-    subroutine calc_s_c(phi, s, c)
-        implicit none
-        real(kind=8), intent(in) :: phi
-        real(kind=8), intent(out) :: s, c
-        !
-        !   s = sin(phi) ; c = cos(phi)
-        !
-        s = dsin(phi)
-        c = dcos(phi)
-        !
-        return
-    end subroutine calc_s_c 
-
-    subroutine update_mat(s, c, p, q, app, apq, aqq, A)
-        implicit none
-        integer, intent(in) :: p, q 
-        real(kind=8), intent(in) :: s, c, app, apq, aqq 
-        real(kind=8), dimension(:,:), intent(inout) :: A
-        !
-        integer :: r, n 
-        real(kind=8) :: apr, aqr
-        !
-        n = size(A, dim=1)
-        !
-        ! Apply the rotation: A' = P^T * A * P 
-        ! -> update altered elements of A;
-        ! only elements of A in rows and columns p,q are altered as:
-        !                                _
-        !   a'_{rp} = c a_{rp} - s a_{rq} |
-        !                                  - For r/=p, r/=q
-        !   a'_{rq} = c a_{rq} + s a_{rp} |
-        !                                -
-        !   a'_{pp} = c^2 a_{pp} + s^2 a_{qq} - 2 s c a_{pq}
-        !   a'_{qq} = c^2 a_{qq} + s^2 a_{pp} + 2 s c a_{pq}
-        !   a'_{pq} = (c^2 - s^2) a_{pq} + s c (a_{pp} - a_{qq})
-        !
-        ! where
-        !
-        !   s = sin(phi) ; c = cos(phi)
-        !
-        dl1: do r = 1, n
-            if (r /= p .and. r /= q) then
-                apr = A(p,r)
-                aqr = A(q,r)
-                !
-                A(p,r) = c * apr - s * aqr
-                A(r,p) = A(p,r)
-                !
-                A(q,r) = s * apr + c * aqr
-                A(r,q) = A(q,r)
-            end if
-        end do dl1
-        !
-        A(p,p) = c**2 * app + s**2 * aqq - 2.0_8 * s * c * apq
-        A(q,q) = c**2 * aqq + s**2 * app + 2.0_8 * s * c * apq
-        A(p,q) = (c**2 - s**2) * apq + s * c * (app - aqq)
-        A(q,p) = A(p,q)
-        !
-        return
-    end subroutine update_mat 
-
+    !
     subroutine jacobi(A, threshold, v, ev)
         !
         ! 
@@ -223,9 +171,11 @@ module jacobi_method
         !
         ! Dummy variables
         !
-        integer :: i, j, totiter, n, ierr, p, q
+        integer :: i, j, totiter, n, m, ierr, p, q, r
         logical :: ans
-        real(kind=8) :: app, apq, aqp, aqq, phi=0.0_8, s, c
+        real(kind=8) :: app, apq, aqp, aqq, phi, c, s
+        real(kind=8), dimension(:,:), allocatable :: Ppq, PpqT, A_aux
+        ! real(kind=8), dimension(:,:), allocatable :: O, OT, D, Dtmp
         !
         ! Check if the input matrix is squared
         !
@@ -258,7 +208,7 @@ module jacobi_method
         !   Eigenvalues list as zeroes
         !   Total number of iterations of the method
         !
-        call identity_mat(v)
+        call identity_mat(v, v)
         ev = 0.0_8
         totiter = 0
         !
@@ -292,23 +242,75 @@ module jacobi_method
             write(*,'(a,i0,a)') '--- ITERATION ', totiter, ' ---'
             write(*,*)
             !
-            ! write(*,'("abs_max_elems(A): A(",i0,",",i0,") =", f10.5)') p, q, A(p,q)
+            write(*,'("abs_max_elems(A): A(",i0,",",i0,") =", f10.5)') p, q, A(p,q)
             !
             ! Compute angle phi for the plane rotation
             !
-            call phi_plane_rot(app,apq,aqq, phi)
+            call phi_plane_rot(app,apq,aqp,aqq, phi)
             !
-            ! write(*,*) 'phi =', phi
-            ! write(*,*) 
+            write(*,*) 'phi =', phi
+            write(*,*) 
+            !
+            ! Apply the rotation: A' = P^T * A * P -> update altered elements of A
+            ! only elements of A in rows and columns p,q are altered as:
+            !                                _
+            !   a'_{rp} = c a_{rp} - s a_{rq} |
+            !                                  - For r/=p, r/=q
+            !   a'_{rq} = c a_{rq} + s a_{rp} |
+            !                                -
+            !   a'_{pp} = c^2 a_{pp} + s^2 a_{qq} - 2 s c a_{pq}
+            !   a'_{qq} = c^2 a_{qq} + s^2 a_{pp} + 2 s c a_{pq}
+            !   a'_{pq} = (c^2 - s^2) a_{pq} + s c (a_{pp} - a_{qq})
+            !
+            ! where
+            !
+            !   s = sin(phi) ; c = cos(phi)
+            !
+            s = dsin(phi)
+            c = dcos(phi)
+            !
+            ! A(p,p) = c**2 * app + s**2 * aqq - 2.0_8 * s * c * apq
+            ! A(q,q) = c**2 * aqq + s**2 * app + 2.0_8 * s * c * apq
+            ! A(p,q) = (c**2 - s**2) * apq + s * c * (app - aqq)
+            ! A(q,p) = A(p,q)
+            ! !
+            ! dl1: do r = 1, n
+            !     if (r /= p .and. r /= q) then
+            !         A(r,p) = c * A(r,p) - s * A(r,q)
+            !         A(r,q) = c * A(r,q) + s * A(r,p)
+            !         A(p,r) = A(r,p)
+            !         A(q,r) = A(r,q)
+            !     end if
+            ! end do dl1
+            !
+            ! Other option: construct P and apply P^T A P
             !
             !
-            ! Calculate sin(phi) and cos(phi)
+            allocate(Ppq(n,n), stat=ierr)
+            if (ierr .ne. 0) stop 'main.f90: Error in allocation of P'
             !
-            call calc_s_c(phi, s, c)
+            allocate(A_aux(n,n), stat=ierr)
+            if (ierr .ne. 0) stop 'main.f90: Error in allocation of P'
             !
-            ! Update matrix A: apply the plane rotation
+            allocate(PpqT(n,n), stat=ierr)
+            if (ierr .ne. 0) stop 'main.f90: Error in allocation of P'
             !
-            call update_mat(s, c, p, q, app, apq, aqq, A)
+            call identity_mat(Ppq, Ppq)
+            !
+            Ppq(p,p) = c
+            Ppq(p,q) = -s
+            Ppq(q,q) = Ppq(p,p)
+            Ppq(q,p) = -Ppq(p,q)
+            !
+            write(*,*) 'Matrix P_pq'
+            do i = 1, n
+                write(*,'(*(f15.5))') ( Ppq(i,j), j=1, n )
+            end do
+            write(*,*)
+            !
+            A_aux = MATMUL(A, Ppq)      ! A_aux = A * P
+            PpqT = TRANSPOSE(Ppq)       ! PT = transpose of P
+            A = MATMUL(PpqT, A_aux)     ! A' = PT * A * P = PT * A_aux
             !
             write(*,*) 'Updated matrix A'
             do i = 1, n
@@ -316,15 +318,16 @@ module jacobi_method
             end do
             write(*,*)
             !
-            ! Update eigenvector matrix V
+            ! Deallocate matrices
             !
-            ! call update_eigenvec(s, c, p, q, app, apq, aqq, A)
+            if (allocated(Ppq)) deallocate(Ppq, stat=ierr)
+            if (ierr /= 0) print *, "Ppq: Deallocation request denied"
             !
-            write(*,*) 'Updated eigenvector matrix V'
-            do i = 1, n
-                write(*,'(*(f15.5))') ( V(i,j), j=1, n )
-            end do
-            write(*,*)
+            if (allocated(PpqT)) deallocate(PpqT, stat=ierr)
+            if (ierr /= 0) print *, "PpqT: Deallocation request denied"
+            !
+            if (allocated(A_aux)) deallocate(A_aux, stat=ierr)
+            if (ierr /= 0) print *, "A_aux: Deallocation request denied"
             !
         end do ml
         !

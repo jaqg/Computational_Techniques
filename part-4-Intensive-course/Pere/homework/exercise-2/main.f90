@@ -69,10 +69,10 @@ program Huckel_Hamiltonian
     call write_mat(A, uf, 'f10.5', size(A, dim=1)) 
     write(unit=uf, fmt=*)
     !
-    write(*,'(a,*(f10.5))') &
-    & 'Calculated eigenvalues: 0, 6 + sqrt(42), 6 - sqrt(42) =', &
-    & 0.0, 6.0 + sqrt(42.0), 6.0 - sqrt(42.0)
-    write(*,*)
+    ! write(*,'(a,*(f10.5))') &
+    ! & 'Calculated eigenvalues: 0, 6 + sqrt(42), 6 - sqrt(42) =', &
+    ! & 0.0, 6.0 + sqrt(42.0), 6.0 - sqrt(42.0)
+    ! write(*,*)
     !
     write(unit=uf, fmt='(A,d10.2)') 'Tolerance for the Jacobi algorithm: ', &
     & tolerance
