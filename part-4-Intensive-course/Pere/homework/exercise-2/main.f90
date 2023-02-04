@@ -12,39 +12,20 @@ program Huckel_Hamiltonian
     use mymodule
     use jacobi_method
     !
-    ! Variable definition
-    !
-    implicit none
-    !
-
-    !
-    ! Files
-    !
-    !
-    ! Formats
-    !
-    !
     ! TODO: ask for file/screen to write the results
     !
     uf=6
     !
     ! === START OF THE PROGRAM ===
     !
-    write(uf,*) '+----------------------------+'
-    write(uf,*) '| Program Huckel_Hamiltonian |'
-    write(uf,*) '+----------------------------+'
+    write(uf,'(a)') '+----------------------------+'
+    write(uf,'(a)') '| Program Huckel_Hamiltonian |'
+    write(uf,'(a)') '+----------------------------+'
     write(uf,*)
     !
-    ! READ INPUT
+    ! Read input
     !
-    open(newunit=ifu, file='./data/input.dat', iostat=ios, status="old", &
-    & action="read")
-    if (ios /= 0) stop "Error opening file 'data/input.dat'"
-    !
-    read(ifu,*)
-    read(ifu,*) tolerance
-    !
-    close(ifu)
+    call read_input
     !
     ! TODO: change trivial matrix by Huckel matrix
     !
@@ -53,6 +34,7 @@ program Huckel_Hamiltonian
     !         A(i,j) = dble(i + j)
     !     end do dl2
     ! end do dl1
+    !
     A(1,1) = 1.0_8
     A(1,2) = sqrt(2.0_8)
     A(1,3) = 2.0_8
@@ -65,21 +47,18 @@ program Huckel_Hamiltonian
     !
     ! Print input
     !
-    write(unit=uf, fmt='(A)') 'Input matrix:'
-    call write_mat(A, uf, 'f10.5', size(A, dim=1)) 
+    call print_input
+    !
+    write(unit=uf, fmt='(a)') '=== PERFORMING JACOBI METHOD ==='
     write(unit=uf, fmt=*)
     !
-    ! write(*,'(a,*(f10.5))') &
-    ! & 'Calculated eigenvalues: 0, 6 + sqrt(42), 6 - sqrt(42) =', &
-    ! & 0.0, 6.0 + sqrt(42.0), 6.0 - sqrt(42.0)
-    ! write(*,*)
+    call jacobi_classic(A, tolerance, v, ev, totiter)
     !
-    write(unit=uf, fmt='(A,d10.2)') 'Tolerance for the Jacobi algorithm: ', &
-    & tolerance
-    write(unit=uf, fmt=*)
+    n = size(A, dim=1)
     !
-    call jacobi(A, tolerance, v, ev)
-    ! call jacobi(A, tolerance, ev)
+    call print_output
     !
+    write(unit=uf, fmt='("Program finished successfully.")')
+    write(unit=uf, fmt='("Bye!")')
     stop
 endprogram Huckel_Hamiltonian

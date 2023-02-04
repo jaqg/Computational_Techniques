@@ -243,7 +243,7 @@ module jacobi_method
         return
     end subroutine update_eigenvec
 
-    subroutine jacobi(A, threshold, v, ev)
+    subroutine jacobi_classic(A, threshold, v, ev, totiter)
         !
         ! 
         !
@@ -253,10 +253,11 @@ module jacobi_method
         real(kind=8), intent(in) :: threshold
         real(kind=8), dimension(:,:), allocatable, intent(out) :: v
         real(kind=8), dimension(:), allocatable, intent(out) :: ev
+        integer, intent(out) :: totiter 
         !
         ! Dummy variables
         !
-        integer :: i, j, totiter, n, ierr, p, q
+        integer :: i, n, ierr, p, q
         logical :: ans
         real(kind=8) :: app, apq, aqp, aqq, phi=0.0_8, s, c
         !
@@ -299,10 +300,6 @@ module jacobi_method
         !
         ml: do
             !
-            ! Update number of iterations
-            !
-            totiter = totiter + 1
-            !
             ! Get the -absolute value- max. element of A
             !
             call abs_max_elems(A, p, q, app, apq, aqp, aqq)
@@ -312,8 +309,12 @@ module jacobi_method
             !
             if (abs(apq) < abs(threshold)) exit ml 
             !
-            write(*,'(a,i0,a)') '--- ITERATION ', totiter, ' ---'
-            write(*,*)
+            ! Update number of iterations
+            !
+            totiter = totiter + 1
+            !
+            ! write(*,'(a,i0,a)') '--- ITERATION ', totiter, ' ---'
+            ! write(*,*)
             !
             ! Compute angle phi for the plane rotation
             !
@@ -349,9 +350,9 @@ module jacobi_method
         !
         do i = 1, n
             ev(i) = A(i,i)
-        end do 
+        end do
         !
         return
-    end subroutine jacobi     
+    end subroutine jacobi_classic
     !
 end module
