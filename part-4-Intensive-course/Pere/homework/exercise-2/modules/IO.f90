@@ -9,8 +9,9 @@ module io
     implicit none
     !
     integer(4) :: i, j, uf, ifu, ios, istat
-    real(kind=8) :: tolerance, ev
-    real(kind=8), dimension(:), allocatable :: v 
+    real(kind=8) :: tolerance
+    real(kind=8), dimension(:,:), allocatable :: v 
+    real(kind=8), dimension(:), allocatable :: ev
     real(kind=8), dimension(3,3) :: A 
 
 end module io 
