@@ -9,8 +9,9 @@ program Huckel_Hamiltonian
     ! Modules
     !
     use io
-    use mymodule
+    use amymodule
     use jacobi_method
+    use Huckel_method
     !
     ! TODO: ask for file/screen to write the results
     !
@@ -27,36 +28,21 @@ program Huckel_Hamiltonian
     !
     call read_input
     !
-    ! TODO: change trivial matrix by Huckel matrix
-    !
-    ! dl1: do i = 1, 3
-    !     dl2: do j = 1, 3
-    !         A(i,j) = dble(i + j)
-    !     end do dl2
-    ! end do dl1
-    !
-    A(1,1) = 1.0_8
-    A(1,2) = sqrt(2.0_8)
-    A(1,3) = 2.0_8
-    A(2,1) = A(1,2)
-    A(2,2) = 3.0_8
-    A(2,3) = sqrt(2.0_8)
-    A(3,1) = A(1,3)
-    A(3,2) = A(2,3)
-    A(3,3) = 1.0_8
-    !
     ! Print input
+    !
+    call Huckel_matrix(natoms, alpha, beta, H)
     !
     call print_input
     !
-    write(unit=uf, fmt='(a)') '=== PERFORMING JACOBI METHOD ==='
-    write(unit=uf, fmt=*)
+    ! Calculate the eigenvalues and eigenvectors with the Jacobi method
     !
-    call jacobi_classic(A, tolerance, v, ev, totiter)
+    call jacobi_classic(H, tolerance, v, ev, totiter)
     !
-    n = size(A, dim=1)
+    call Huckel_evals_evecs(ev, v)
     !
     call print_output
+    !
+    ! Values calculated from the slides
     !
     write(unit=uf, fmt='("Program finished successfully.")')
     write(unit=uf, fmt='("Bye!")')

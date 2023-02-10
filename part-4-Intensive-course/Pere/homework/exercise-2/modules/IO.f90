@@ -6,13 +6,13 @@ module io
     ! 
     ! Input/Output module
     !
-    use mymodule
+    use amymodule
     !
     implicit none
     !
-    integer :: i, j, uf, ifu, ios, istat, n, totiter
-    real(kind=8) :: tolerance
-    real(kind=8), dimension(:,:), allocatable :: v 
+    integer :: i, j, uf, ifu, ios, istat, n, totiter, natoms
+    real(kind=8) :: tolerance, alpha, beta
+    real(kind=8), dimension(:,:), allocatable :: v, H
     real(kind=8), dimension(:), allocatable :: ev
     real(kind=8), dimension(3,3) :: A 
 
@@ -25,7 +25,16 @@ module io
         if (ios /= 0) stop "Error opening file 'data/input.dat'"
         !
         read(ifu,*)
+        read(ifu,*) natoms
+        !
+        read(ifu,*)
         read(ifu,*) tolerance
+        !
+        read(ifu,*)
+        read(ifu,*) alpha
+        !
+        read(ifu,*)
+        read(ifu,*) beta
         !
         close(ifu)
         !
@@ -37,9 +46,14 @@ module io
         write(unit=uf, fmt='(a)') '=== INPUT ==='
         write(unit=uf, fmt=*)
         !
-        write(unit=uf, fmt='(A)') 'Input matrix:'
-        call write_mat(A, uf, 'f10.5', size(A, dim=1)) 
+        write(unit=uf,fmt='(a)') 'Values of alpha, beta for the Hückel method:'
+        write(unit=uf,fmt='(a,f10.5,a)') 'alpha =', alpha, ' eV'
+        write(unit=uf,fmt='(a,f10.5,a)') 'beta =', beta, ' eV'
         write(unit=uf, fmt=*)
+        !
+        write(unit=uf,fmt='(a)') 'Hückel Hamiltonian matrix'
+        call write_mat(H, uf, 'f10.5', size(H, dim=2))
+        write(unit=uf,fmt=*)
         !
         write(unit=uf, fmt='(A,d10.2)') 'Tolerance for the Jacobi algorithm: ', &
         & tolerance
@@ -57,14 +71,14 @@ module io
         write(unit=uf, fmt=*)
         !
         write(unit=uf,fmt='(a)') 'Eigenvalues:'
-        do i = 1, n
+        do i = 1, natoms
             write(unit=uf,fmt='(*(f15.5))') ev(i)
         end do
         write(unit=uf,fmt=*)
         !
-        write(unit=uf,fmt='(a)') 'Normalised eigenvector matrix V'
-        do i = 1, n
-            write(unit=uf,fmt='(*(f15.5))') ( V(i,j), j=1, n )
+        write(unit=uf,fmt='(a)') 'Normalised MO coefficient matrix C'
+        do i = 1, natoms
+            write(unit=uf,fmt='(*(f15.5))') ( V(i,j), j=1, natoms )
         end do
         write(unit=uf,fmt=*)
         !

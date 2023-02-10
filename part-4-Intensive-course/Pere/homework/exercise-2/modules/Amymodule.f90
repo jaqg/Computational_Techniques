@@ -2,7 +2,7 @@
 ! | Author: Jose Antonio Quinonero Gris          |
 ! | Creation date: Wednesday 10:32:37 25/01/2023 |
 ! +----------------------------------------------+
-module mymodule
+module amymodule
 
     implicit none
     !
@@ -280,4 +280,4 @@ module mymodule
         return
     end subroutine write_vec
  
-end module mymodule
+end module amymodule

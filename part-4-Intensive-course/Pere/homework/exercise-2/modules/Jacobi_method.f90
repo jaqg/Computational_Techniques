@@ -313,36 +313,20 @@ module jacobi_method
             !
             totiter = totiter + 1
             !
-            ! write(*,'(a,i0,a)') '--- ITERATION ', totiter, ' ---'
-            ! write(*,*)
-            !
             ! Compute angle phi for the plane rotation
             !
             call phi_plane_rot(app,apq,aqq, phi)
             !
             ! Calculate sin(phi) and cos(phi)
-            !
             call calc_s_c(phi, s, c)
             !
             ! Update matrix A: apply the plane rotation
             !
             call update_mat(s, c, p, q, app, apq, aqq, A)
             !
-            ! write(*,*) 'Updated matrix A'
-            ! do i = 1, n
-            !     write(*,'(*(f15.5))') ( A(i,j), j=1, n )
-            ! end do
-            ! write(*,*)
-            !
             ! Update eigenvector matrix V
             !
             call update_eigenvec(s, c, p, q, V)
-            !
-            ! write(*,*) 'Updated (and normalised) eigenvector matrix V'
-            ! do i = 1, n
-            !     write(*,'(*(f15.5))') ( V(i,j), j=1, n )
-            ! end do
-            ! write(*,*)
             !
         end do ml
         !
