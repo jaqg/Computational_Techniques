@@ -66,12 +66,28 @@ module Huckel_method
         return
     end function norm_vec
 
-    subroutine distance_matrix(xyz_mat, distance_mat)
+    subroutine distance_matrix(xyz_mat, dist_mat)
         implicit none
         real(kind=8), dimension(:,:), intent(in) :: xyz_mat
-        real(kind=8), dimension(:,:), allocatable, intent(out) :: distance_mat
+        real(kind=8), dimension(:,:), allocatable, intent(out) :: dist_mat
         !
-        
+        integer :: i, j, n, m, ierr
+        real(kind=8) :: dist
+        !
+        n = size(xyz_mat, dim=1)
+        m = size(xyz_mat, dim=2)
+        !
+        allocate(dist_mat(n,m), stat=ierr)
+        if (ierr .ne. 0) stop &
+        & 'Huckel_method.f90 distance_matrix: Error in allocation of dist_mat'
+        !
+        dl1: do i = 1, n
+            dl2: do j = i, m
+                call d_vec(xyz_mat(i,:), xyz_mat(j,:), dist)
+                dist_mat(i,j) = dist
+                dist_mat(j,i) = dist_mat(i,j)
+            end do dl2
+        end do dl1
         !
         return
     end subroutine distance_matrix
