@@ -157,7 +157,8 @@ module mymodule
         write(uf,*)
         write(uf,'(A, i0)') 'Number of iterations needed: ', totiter
         write(uf,'(A, f13.8)') 'Final subinterval value: ', h
-        write(uf,'(A, i0)') 'Number of abscissa points: ', j
+        write(uf,'(A, i0)') 'Number of subintervals: ', j
+        write(uf,'(A, i0)') 'Number of abscissa points: ', j + 1
         write(uf,'(A, f13.8)') 'Final value of the quadrature: ', IRC
         !
         return
