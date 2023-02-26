@@ -1,0 +1,6 @@
+# Lower integration limit (real)
+1.0
+# Upper integration limit (real)
+3.0
+# Threshold of convergence
+1.0D-8
