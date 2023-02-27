@@ -3,7 +3,7 @@
 ! | Creation date: Sunday 13:24:16 26/02/2023 |
 ! +-------------------------------------------+
 
-program NumInt_exercise_2
+program NumInt_exercise_3
     !
     ! Fortran program to solve numerically the integral
     !
@@ -20,7 +20,7 @@ program NumInt_exercise_2
     ! === START OF THE PROGRAM ===
     !
     write(*,'(A)') '+---------------------------+'
-    write(*,'(A)') '| Program NumInt_exercise_2 |'
+    write(*,'(A)') '| Program NumInt_exercise_3 |'
     write(*,'(A)') '+---------------------------+'
     write(*,*)
     !
@@ -40,14 +40,9 @@ program NumInt_exercise_2
     !
     write(*,*) 'Do you want to print the results in the screen, in a file or'
     write(*,*) 'both? [screen/file/both]'
-    write(*,*)
-    ! read(*,'(A)') printres
-    ! printres = trim(printres)
-    !
-    ! TODO: CAMBIAR
-    !
-    printres = 'screen'
+    read(*,'(A)') printres
     printres = trim(printres)
+    write(*,*)
     !
     ! If selected
     ! 'screen' -> set unitfile (of output file) to 6
@@ -122,4 +117,4 @@ program NumInt_exercise_2
     write(*,'(A)') 'Bye!'
     !
     stop
-endprogram NumInt_exercise_2
+endprogram NumInt_exercise_3
