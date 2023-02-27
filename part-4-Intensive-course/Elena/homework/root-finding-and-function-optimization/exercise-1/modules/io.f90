@@ -13,7 +13,7 @@ module io
     integer :: i, uf, ndim, maxiter, ierr, totiter
     real(kind=8) :: gamma, h, threshold
     real(kind=8), dimension(:), allocatable :: initcoord, mincoord, func
-    real(kind=8), dimension(:,:), allocatable :: coord, grad, normgrad
+    real(kind=8), dimension(:,:), allocatable :: coord, grad, normgrad, conv
     !
     ! Subprograms
     !
@@ -82,13 +82,14 @@ module io
         write(unit=uf, fmt='(a)') '=== RESULTS ==='
         write(unit=uf, fmt=*)
         !
-        write(unit=uf, fmt='(4x,a,4x,a,13x,a,12x,a,8x,a,8x,a,7x,a,3x,a,a)') &
-        & 'it','x','y','f(x,y)','grad(x)','grad(y)','normgrad(x)','normgrad(y)'
+        write(unit=uf, fmt='(2(4x,a),13x,a,12x,2(a,8x),a,7x,2(a,3x),a,7x,a)') &
+        & 'it','x','y','f(x,y)','grad(x)','grad(y)','normgrad(x)', &
+        & 'normgrad(y)', 'conv(x)', 'conv(y)'
         !
         wl1: do i = 1, totiter
             write(unit=uf, fmt='(i6,*(f14.8))') &
             & i, coord(i,1), coord(i,2), func(i), grad(i,1), grad(i,2), &
-            & normgrad(i,1), normgrad(i,2)
+            & normgrad(i,1), normgrad(i,2), conv(i,1), conv(i,2)
         end do wl1
         !
         return

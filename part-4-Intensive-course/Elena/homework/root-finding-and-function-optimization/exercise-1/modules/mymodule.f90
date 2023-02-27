@@ -27,9 +27,9 @@ module mymodule
         implicit none
         real(kind=8), intent(in) :: x, y
         !
-        ! f(x,y) = 25x^2 + y^2
+        ! $f(x,y) = \sin(x+y) + (x - y)^2 - 1.5x + 3.5y + 3$
         !
-        f = 25.0_8 * x**2 + y**2
+        f = dsin(x+y) + (x - y)**2 - 1.5_8 * x + 3.5_8 * y + 3.0_8
         !
         return
     end function f
@@ -231,7 +231,7 @@ module mymodule
     end function norm_vec
 
     subroutine steepest_descent(initcoord, gamma, maxiter, threshold, &
-        & fin_diff_method, h, coord, grad, normgrad, mincoord, func, totiter)
+        & fin_diff_method, h, coord, grad, normgrad, conv, mincoord, func, totiter)
         !
         ! Subroutine for the Steepest or gradient descent method
         !
@@ -243,6 +243,7 @@ module mymodule
         ! coord                 real, double precision, 2D array
         ! grad                  real, double precision, 2D array
         ! normgrad              real, double precision, 2D array
+        ! conv                  real, double precision, 2D array
         ! mincoord              real, double precision, 1D array
         ! func                  real, double precision, 1D array
         ! totiter               integer, single precision
@@ -255,6 +256,7 @@ module mymodule
         ! coord: coordinate matrix for each step (row) and dimension (col)
         ! grad: gradient matrix for each step (row) and dimension (col)
         ! normgrad: normalised gradient matrix
+        ! conv: matrix with the convergence (error) values
         ! mincoord: 1D array with the coordinates of the minimum
         ! func: 1D array with the evaluation of the function, f(x,y)
         ! totiter: total number of iterations performed
@@ -268,6 +270,7 @@ module mymodule
         real(kind=8), dimension(:,:), allocatable, intent(out) :: coord
         real(kind=8), dimension(:,:), allocatable, intent(out) :: grad
         real(kind=8), dimension(:,:), allocatable, intent(out) :: normgrad
+        real(kind=8), dimension(:,:), allocatable, intent(out) :: conv
         real(kind=8), dimension(:), allocatable, intent(out) :: mincoord
         real(kind=8), dimension(:), allocatable, intent(out) :: func
         integer, intent(out) :: totiter
@@ -293,6 +296,9 @@ module mymodule
         !
         allocate(func(maxiter), stat=ierr)
         if (ierr .ne. 0) stop 'steepest_descent: Error in allocation of func'
+        !
+        allocate(conv(maxiter, size(initcoord, dim=1)), stat=ierr)
+        if (ierr .ne. 0) stop 'steepest_descent: Error in allocation of conv'
         !
         ! 1. Choose an initial starting point P0
         !
@@ -324,7 +330,8 @@ module mymodule
             !
             ! 5. Check for convergence: P_{k+1} - P_k < tolerance
             !
-            converged = all( dabs(coord(i+1,:) - coord(i,:)) < threshold, 1 )
+            conv(i,:) = dabs( coord(i+1,:) - coord(i,:) )
+            converged = all( conv(i,:) < threshold, 1 )
             !
             if (converged .eqv. .True.) exit ml1
             !

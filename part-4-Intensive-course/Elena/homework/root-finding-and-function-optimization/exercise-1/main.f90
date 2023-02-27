@@ -38,7 +38,7 @@ program FuncOpt_exercise_1
     ! Steepest Descent method
     !
     call steepest_descent(initcoord, gamma, maxiter, threshold, &
-    & fin_diff_method, h, coord, grad, normgrad, mincoord, func, totiter)
+    & fin_diff_method, h, coord, grad, normgrad, conv, mincoord, func, totiter)
     !
     ! --- Print results ---
     !
