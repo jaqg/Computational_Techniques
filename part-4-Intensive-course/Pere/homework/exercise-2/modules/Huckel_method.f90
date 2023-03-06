@@ -8,10 +8,14 @@ module Huckel_method
     contains
 
     subroutine d_vec(u, v, d)
+        !
+        ! Subroutine to compute the distance between two vectors, u and v
+        !
         implicit none
+        !
         real(kind=8), dimension(:), intent(in) :: u, v
         real(kind=8), intent(out) :: d
-        !
+        ! Dummy variables
         integer :: i, n, m 
         real(kind=8) :: suma 
         !
@@ -71,18 +75,24 @@ module Huckel_method
         real(kind=8), dimension(:,:), intent(in) :: xyz_mat
         real(kind=8), dimension(:,:), allocatable, intent(out) :: dist_mat
         !
-        integer :: i, j, n, m, ierr
+        integer :: i, j, n, ierr
         real(kind=8) :: dist
         !
         n = size(xyz_mat, dim=1)
-        m = size(xyz_mat, dim=2)
         !
-        allocate(dist_mat(n,m), stat=ierr)
+        allocate(dist_mat(n,n), stat=ierr)
         if (ierr .ne. 0) stop &
         & 'Huckel_method.f90 distance_matrix: Error in allocation of dist_mat'
         !
         dl1: do i = 1, n
-            dl2: do j = i, m
+            !
+            ! Diagonal elements
+            !
+            dist_mat(i,i) = 0.0_8
+            !
+            ! Non-diagonal elements
+            !
+            dl2: do j = i+1, n
                 call d_vec(xyz_mat(i,:), xyz_mat(j,:), dist)
                 dist_mat(i,j) = dist
                 dist_mat(j,i) = dist_mat(i,j)
@@ -93,34 +103,56 @@ module Huckel_method
     end subroutine distance_matrix
 
     subroutine Huckel_matrix(n, alpha, beta, H)
+        !
+        ! Subroutine to create the Hamiltonian matrix for the Hückel method
+        !
         implicit none
+        !
         integer, intent(in) :: n
         real(kind=8), intent(in) :: alpha, beta 
         real(kind=8), dimension(:,:), allocatable, intent(out) :: H
-        !
+        ! Dummmy variables
         integer :: i, j, ierr
         !
         ! For the Hückel approximation
         !
         ! S_{ij} = delta_{ij}
         !
-        ! the Hamiltonian matrix H reads
+        ! the Hamiltonian matrix, H, reads
         !             -
         !            | alpha    if i = j
         ! H_{i,j} = -  beta     if i,j adjacent
         !            | 0        otherwise
         !             -
+        !
+        ! Allocate needed arrays
+        !
         allocate(H(n,n), stat=ierr)
         if (ierr .ne. 0) stop &
             & 'ERROR Huckel_method.f90 huckel_matrix: Error in allocation of H'
+        !
         ! Initialize H
+        !
         H = 0.0_8
+        !
+        ! Compute H
+        !
         dli: do i = 1, n
-            dlii: do j = i, n
-                if (i == j) H(i,j) = alpha
+            !
+            ! Diagonal elements
+            !
+            H(i,i) = alpha
+            !
+            dlii: do j = i+1, n
+                !
+                ! Non-diagonal elements
+                !
                 if (abs(i-j) == 1) H(i,j) = beta
+                !
                 ! Construct the rest of the matrix from symmetry
+                !
                 H(j,i) = H(i,j)
+                !
             end do dlii
         end do dli
         !
@@ -128,26 +160,45 @@ module Huckel_method
     end subroutine Huckel_matrix 
         
     subroutine sort_evals_evec(ev, v)
+        !
+        ! Subroutine to sort the eigenvalues, ev, and eigenvectors, v, in 
+        ! ascending order
+        !
         implicit none
+        !
         real(kind=8), dimension(:), intent(inout) :: ev
         real(kind=8), dimension(:,:), intent(inout) :: v
-        !
+        ! Dummy variables
         integer :: i, j, n, ierr 
         real(kind=8) :: tmp 
         real(kind=8), dimension(:), allocatable :: tmp_arr
         !
+        ! Check that they match sizes
+        !
         n = size(ev, dim=1)
+        !
+        if (size(v, dim=2) .ne. n) stop &
+            & 'sort_evals_evec: ev and v do not match size.' 
+        !
+        ! Allocate needed arrays
         !
         allocate(tmp_arr(n), stat=ierr)
         if (ierr .ne. 0) stop &
         & 'Huckel_method.f90 sort_evals_evec: Error in allocation of tmp_arr'
         !
+        ! Initialize temporal variables
+        !
         tmp = 0.0_8
         tmp_arr = 0.0_8
+        !
+        ! Main loop
         !
         dli: do i = 1, n-1
             dlii: do j = i + 1, n
                 if (ev(i) > ev(j)) then 
+                    !
+                    ! Swap the larger eigenvalue with the smaller one
+                    !
                     ! Store the value in a temporal variable
                     tmp = ev(i)
                     ! Let ev(i) be the smaller number
@@ -162,7 +213,7 @@ module Huckel_method
                     tmp_arr(:) = v(:,i)
                     ! Let v(:,i) be the vector corresponding the smaller eigenv
                     v(:,i) = v(:,j)
-                    ! and v(:,j) the one corresponding the larger eigenval
+                    ! and v(:,j) the one corresponding to the larger eigenval
                     v(:,j) = tmp_arr(:)
                     !
                 end if
