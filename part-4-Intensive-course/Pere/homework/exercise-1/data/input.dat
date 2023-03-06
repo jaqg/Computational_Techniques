@@ -1,0 +1,8 @@
+# Elimination method (Jordan, backsubstitution)
+Jordan
+# (x y) data file
+./data/ex5.dat
+# Degree of the fitting polynomial
+3
+# Tolerance for the Gauss-Jordan method
+1.d-8

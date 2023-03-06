@@ -7,12 +7,7 @@ module IO
     !
     implicit none
     !
-    character(len=80) :: themodel, themethod
-    real(kind=8) :: MEthreshold
-    real(kind=8) :: t0, h, tf, prey0, predator0
-    real(kind=8) :: alpha, alphaprime, beta, kappa, kappaprime, lambda
-    real(kind=8), dimension(:), allocatable :: t, prey, predator, &
-                                             & preyRK, predatorRk
+    integer :: uf 
     !
     contains
         !

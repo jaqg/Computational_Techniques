@@ -222,7 +222,7 @@ module mymodule
         ! Print results
         !
         write(uf,*)
-        write(uf,'(A, i0)') 'Number of quadrature points employed:', totiter
+        write(uf,'(A, i0)') 'Number of quadrature points employed: ', totiter
         write(uf,'(A, f13.8)') 'Final value of the quadrature: ', IRC
         !
         return

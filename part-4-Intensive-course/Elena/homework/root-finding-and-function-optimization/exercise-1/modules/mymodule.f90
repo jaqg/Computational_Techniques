@@ -331,7 +331,7 @@ module mymodule
             ! 5. Check for convergence: P_{k+1} - P_k < tolerance
             !
             conv(i,:) = dabs( coord(i+1,:) - coord(i,:) )
-            converged = all( conv(i,:) < threshold, 1 )
+            converged = all( conv(i,:) .lt. threshold, 1 )
             !
             if (converged .eqv. .True.) exit ml1
             !
