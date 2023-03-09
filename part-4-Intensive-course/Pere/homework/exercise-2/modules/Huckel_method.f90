@@ -70,11 +70,76 @@ module Huckel_method
         return
     end function norm_vec
 
-    subroutine distance_matrix(xyz_mat, dist_mat)
+    subroutine read_XYZ(filename, natoms, symb, xyz_mat)
+        !
+        ! Subroutine to read xyz coordinates from file and write to xyz_mat
+        ! array
+        !
+        ! Input: filename
+        ! Output: natoms, symb, xyyz_mat
+        !
+        ! filename      character
+        ! natoms        integer, single precision
+        ! symb          character, 1D array
+        ! xyz_mat       real, double precision, 2D array
+        !
+        ! filename: input xyz file name
+        ! natoms: total number of atoms
+        ! symb: 1D array with the atom labels
+        ! xyz_mat: matrix with the (x y z) coordinates
+        !
         implicit none
+        !
+        character(len=*), intent(in) :: filename
+        integer, intent(out) :: natoms 
+        character(len=2), dimension(:), allocatable, intent(out) :: symb
+        real(kind=8), dimension(:,:), allocatable, intent(out) :: xyz_mat
+        ! Dummy variables
+        integer :: i, nuf, ios, ierr
+        !
+        ! Open input file
+        !
+        open(newunit=nuf, file='./data/'//filename, iostat=ios, status="old",action="read")
+        if (ios /= 0) stop "read_XYZ: Error opening "//filename
+        !
+        ! Read number of atoms
+        !
+        read(nuf,*) natoms
+        !
+        ! Allocate symb and XYZ matrix
+        !
+        allocate(symb(natoms), stat=ierr)
+        if (ierr .ne. 0) stop 'read_XYZ: Error in allocation of symb'
+        !
+        allocate(xyz_mat(natoms,3), stat=ierr)
+        if (ierr .ne. 0) stop 'read_XYZ: Error in allocation of xyz_mat'
+        !
+        ! Skip title
+        !
+        read(nuf,*)
+        !
+        ! Read XYZ coordinates
+        !
+        dl1: do i = 1, natoms
+            read(nuf,*) symb(i), xyz_mat(i,:)
+        end do dl1
+        !
+        ! Close xyz file
+        !
+        close(nuf)
+        !
+        return
+    end subroutine read_XYZ 
+
+    subroutine distance_matrix(xyz_mat, dist_mat)
+        !
+        ! Subroutine to create the distance matrix from the xyz matrix
+        !
+        implicit none
+        !
         real(kind=8), dimension(:,:), intent(in) :: xyz_mat
         real(kind=8), dimension(:,:), allocatable, intent(out) :: dist_mat
-        !
+        ! Dummy variables
         integer :: i, j, n, ierr
         real(kind=8) :: dist
         !
@@ -83,6 +148,8 @@ module Huckel_method
         allocate(dist_mat(n,n), stat=ierr)
         if (ierr .ne. 0) stop &
         & 'Huckel_method.f90 distance_matrix: Error in allocation of dist_mat'
+        !
+        ! Main loop
         !
         dl1: do i = 1, n
             !
@@ -93,26 +160,114 @@ module Huckel_method
             ! Non-diagonal elements
             !
             dl2: do j = i+1, n
+                !
+                ! Calculate the distance between atoms
+                !
                 call d_vec(xyz_mat(i,:), xyz_mat(j,:), dist)
+                !
+                ! And store it in the distance matrix. Also, apply symmetry
+                !
                 dist_mat(i,j) = dist
                 dist_mat(j,i) = dist_mat(i,j)
+                !
             end do dl2
         end do dl1
         !
         return
     end subroutine distance_matrix
 
-    subroutine Huckel_matrix(n, alpha, beta, H)
+    subroutine topological_matrix(dist_mat, adjency, symbols, topological_mat)
+        !
+        ! Subroutine to create the topological matrix from the distance matrix
+        !
+        implicit none
+        !
+        real(kind=8), dimension(:,:), intent(in) :: dist_mat
+        real(kind=8), dimension(2), intent(in) :: adjency 
+        character(len=2), dimension(:), intent(in) :: symbols
+        real(kind=8),dimension(:,:),allocatable,intent(out) :: topological_mat
+        ! Dummy variables
+        integer :: i, j, n, nCatoms, ierr
+        integer, dimension(:), allocatable :: tmp 
+        !
+        ! Check that dist_mat and symbols are the same size
+        !
+        n = size(dist_mat, dim=1)
+        !
+        if (size(symbols, dim=1) .ne. n) stop &
+        &'topological_matrix: Error; dist_mat and symbols are not the same size'
+        !
+        ! Allocate temporal array
+        !
+        allocate(tmp(n), stat=ierr)
+        if (ierr .ne. 0) stop 'topological_matrix: Error in allocation of tmp'
+        !
+        ! Count number of C atoms to allocate the topological matrix
+        !
+        nCatoms = 0
+        j = 1
+        !
+        dl1: do i = 1, n
+            if (symbols(i) .eq. 'C ' .or. &
+              & symbols(i) .eq. ' C' .or. &
+              & symbols(i) .eq. 'c ' .or. &
+              & symbols(i) .eq. ' c') then
+                !
+                ! Track the total number of C atoms
+                !
+                nCatoms=nCatoms + 1
+                !
+                ! Store the index of the C atoms in a temporary array
+                !
+                tmp(j) = i
+                j = j + 1
+                !
+            end if
+        end do dl1
+        !
+        ! Allocate the topological matrix with the number of C atoms
+        !
+        allocate(topological_mat(nCatoms, nCatoms), stat=ierr)
+        if (ierr .ne. 0) stop &
+            & 'topological_matrix: Error in allocation of topological_mat'
+        !
+        ! Create the topological matrix
+        !
+        dl2: do i = 1, nCatoms
+            dl3: do j = 1, nCatoms
+                topological_mat(i,j) = dist_mat(tmp(i),tmp(j))
+            end do dl3
+        end do dl2
+        !
+        ! Apply the adjency criteria
+        !
+        dl4: do i = 1, nCatoms
+            dl5: do j = 1, nCatoms
+                !
+                if ( dabs(topological_mat(i,j)) .gt. minval(adjency) .and. &
+                    & dabs(topological_mat(i,j)) .lt. maxval(adjency) ) then
+                    topological_mat(i,j) = 1.0_8
+                else
+                    topological_mat(i,j) = 0.0_8
+                end if
+                !
+            end do dl5
+        end do dl4
+        !
+        return
+    end subroutine topological_matrix 
+
+    subroutine Huckel_matrix(topolog_mat, alpha, beta, H)
         !
         ! Subroutine to create the Hamiltonian matrix for the Hückel method
         !
         implicit none
         !
-        integer, intent(in) :: n
-        real(kind=8), intent(in) :: alpha, beta 
+        real(kind=8), dimension(:,:), intent(in) :: topolog_mat 
+        real(kind=8), intent(in) :: alpha, beta
         real(kind=8), dimension(:,:), allocatable, intent(out) :: H
         ! Dummmy variables
-        integer :: i, j, ierr
+        integer :: i, j, n, ierr
         !
         ! For the Hückel approximation
         !
@@ -126,6 +281,8 @@ module Huckel_method
         !             -
         !
         ! Allocate needed arrays
+        !
+        n = size(topolog_mat, dim=1)
         !
         allocate(H(n,n), stat=ierr)
         if (ierr .ne. 0) stop &
@@ -147,7 +304,7 @@ module Huckel_method
                 !
                 ! Non-diagonal elements
                 !
-                if (abs(i-j) == 1) H(i,j) = beta
+                H(i,j) = beta * topolog_mat(i,j)
                 !
                 ! Construct the rest of the matrix from symmetry
                 !
@@ -225,8 +382,8 @@ module Huckel_method
 
     subroutine Huckel_evals_evecs(ev, v)
         implicit none
-        real(kind=8), dimension(:), intent(out) :: ev
-        real(kind=8), dimension(:,:), intent(out) :: v
+        real(kind=8), dimension(:), intent(inout) :: ev
+        real(kind=8), dimension(:,:), intent(inout) :: v
         !
         integer :: i 
         !

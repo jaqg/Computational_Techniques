@@ -1,0 +1,10 @@
+# Number of coordinates ncoord (integer, single precision)
+2
+# Value of initial points x_0, y_0 (real, double precision)
+1.0 3.0
+# Threshold for convergence
+1.0D-8
+# Method for the finite difference (forward, central, backward)
+Central
+# Read value of h for the finite difference
+1.0D-6

@@ -1,0 +1,12 @@
+# Number of coordinates ncoord (integer, single precision)
+2
+# Maximum iteration to finish the program maxiter (integer, single precision)
+40
+# Value of initial points x_0, y_0 (real, double precision)
+1.0 3.0
+# Value of fixed step size gamma (real, double precision)
+0.3
+# Method for the finite difference (string)
+Central
+# Read value of h for the finite difference
+1.0D-4
