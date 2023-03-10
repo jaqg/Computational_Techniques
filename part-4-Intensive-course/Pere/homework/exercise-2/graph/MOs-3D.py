@@ -10,6 +10,7 @@ import matplotlib
 from matplotlib import markers
 from matplotlib.lines import MarkerStyle
 import numpy as np
+import math
 from numpy.core.multiarray import arange, dtype
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -68,10 +69,8 @@ for line in datos:
     if re.search(end_match, line):
         end_line = tmp - 2
     tmp = tmp + 1
-
 with open(fichero_datos) as fichero:
     coefs = np.loadtxt(itertools.islice(fichero, beg_line, end_line))
-
 #
 # Create new arrays with coordinates of the C atoms
 #
@@ -88,10 +87,8 @@ for atom in atoms:
         Czcoord.append(zcoord[tmp])
 
     tmp = tmp + 1
-
 # Number of C atoms
 nCatoms = len(Catoms)
-
 #
 # Plot
 #
@@ -112,13 +109,14 @@ def plt_MO(center, radius, thecolor, thealpha):
 MO = 0
 MO_alpha = 0.5
 for subpl in np.arange(1, nCatoms+1, 1):
-    ax = fig.add_subplot(int(nCatoms/6), nCatoms, subpl, projection='3d')
+    ax = fig.add_subplot(math.ceil(nCatoms/6), nCatoms, subpl, projection='3d')
     ax.axis('off')
     ax.plot3D(Cxcoord, Cycoord, Czcoord, ls='-', lw=1, marker='o', ms=2, c='k')
-    ax.plot3D((Cxcoord[0], Cxcoord[nCatoms-1]),
-              (Cycoord[0], Cycoord[nCatoms-1]),
-              (Czcoord[0], Czcoord[nCatoms-1]),
-              ls='-', lw=1, marker='o', ms=2, c='k')
+    if molecule != 'butadiene':
+        ax.plot3D((Cxcoord[0], Cxcoord[nCatoms-1]),
+                  (Cycoord[0], Cycoord[nCatoms-1]),
+                  (Czcoord[0], Czcoord[nCatoms-1]),
+                  ls='-', lw=1, marker='o', ms=2, c='k')
     #
     # Plot each MO
     #

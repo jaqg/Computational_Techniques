@@ -1,14 +1,14 @@
 # Fdb version 3
-["bibtex main"] 1678464953 "main.aux" "main.bbl" "main" 1678466276
+["bibtex main"] 1678466828 "main.aux" "main.bbl" "main" 1678466831
   "./TC.bib" 1678455290 250 e9ea69ad05e758b51017d298d1c6e0a7 ""
   "/home/jose/Documents/latex/preamble/references.bib" 1646593657 1306 728628f5628f26fb43f4bb8050b941ce ""
   "/usr/share/texmf-dist/bibtex/bst/biblatex/biblatex.bst" 1650185741 65483 fc69f364ef63c07bf68a2ab4b323f197 ""
-  "main-blx.bib" 1678466275 344 d6634b8404c491d6e1d040ae10fd72fb "pdflatex"
-  "main.aux" 1678466275 4961 6b47ae84cceb5ab2faa7c6a729c69e6b "pdflatex"
+  "main-blx.bib" 1678466830 344 d6634b8404c491d6e1d040ae10fd72fb "pdflatex"
+  "main.aux" 1678466830 4961 baf6921ecb99b2cbd6e0dbd03faaf63d "pdflatex"
   (generated)
   "main.bbl"
   "main.blg"
-["pdflatex"] 1678466273 "main.tex" "main.pdf" "main" 1678466276
+["pdflatex"] 1678466828 "main.tex" "main.pdf" "main" 1678466831
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1650183167 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1650183167 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/share/texmf-dist/fonts/map/fontname/texfonts.map" 1650183167 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -340,12 +340,12 @@
   "front-page/info.tex" 1678358427 809 26fd3cd5d1f8372ee29624f9051a208f ""
   "front-page/minimal-titlepage.tex" 1678357525 353 110e5402663c7f610fe435aa28c98710 ""
   "function-optimization.tex" 1678436466 78 d4796ade7bfd078bceae35bee5936421 ""
-  "main.aux" 1678466275 4961 6b47ae84cceb5ab2faa7c6a729c69e6b "pdflatex"
-  "main.bbl" 1678464953 1691 21e8378eb5020fdb2c84fc8787efd5d2 "bibtex main"
-  "main.out" 1678466275 959 a2f6742b0bd4b414ac5eb2211161b3e3 "pdflatex"
-  "main.run.xml" 1678466275 2660 3ccad630dd79cca518d73175e4696730 "pdflatex"
-  "main.tex" 1678455348 2639 1255fa3a73227abc3b35150d9d10f6b6 ""
-  "numerical-integration.tex" 1678466272 16756 e83969ef47527d8fed4f991fc907c6b1 ""
+  "main.aux" 1678466830 4961 baf6921ecb99b2cbd6e0dbd03faaf63d "pdflatex"
+  "main.bbl" 1678466828 1691 21e8378eb5020fdb2c84fc8787efd5d2 "bibtex main"
+  "main.out" 1678466830 959 a2f6742b0bd4b414ac5eb2211161b3e3 "pdflatex"
+  "main.run.xml" 1678466830 2660 3ccad630dd79cca518d73175e4696730 "pdflatex"
+  "main.tex" 1678466824 2650 b20c32ba23539a84f49f2d430fa860f3 ""
+  "numerical-integration.tex" 1678466796 16756 e35160ffd8e2c4527b8df1cc455b587e ""
   (generated)
   "main-blx.bib"
   "main.aux"

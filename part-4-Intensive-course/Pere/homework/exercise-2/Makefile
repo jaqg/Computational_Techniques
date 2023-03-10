@@ -60,7 +60,7 @@ OBJ=${SRC:.f90=.o}
 # and the data for the script in 'GRAPHDATA'
 #
 GRAPHDIR=graph
-GRAPHPROG=$(GRAPHDIR)/graph.py
+GRAPHPROG=$(GRAPHDIR)/MOs-3D.py
 ALLGRAPHS=$(shell ls $(GRAPHDIR)/*.py)
 GRAPHDATA=$(GRAPHDIR)/out-graph.dat
 #
@@ -93,7 +93,7 @@ $(MAINEX): $(OBJ) $(MODMOD)
 # `make allplots` to create/update all plots
 # `make cleanplots` to remove pdf plots
 #
-plot: $(GRAPHDATA)
+plot:
 	python3 $(GRAPHPROG)
 allplots: $(GRAPHDATA)
 	@for i in $(ALLGRAPHS); do \

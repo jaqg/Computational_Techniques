@@ -1,0 +1,471 @@
+\graphicspath{{./figures/}}
+
+% -----------------------------------
+\part{Polynomial regression analysis}
+% -----------------------------------
+In this part, a program has been written to perform a least square regression
+analysis to fit a set of points to a polynomial of degree $m$ solving a 
+linear system by the Gauss-Jordan method.
+
+% ------
+\section{Theoretical background}\label{theoretical_background}
+% ------
+
+The least squares regression polynomial of degree $m$ for the set of points
+$\left\{ \left( x_1,y_1 \right), \left( x_2,y_2 \right), \ldots, \left( x_n,y_n \right) \right\}$ 
+is given by 
+\begin{equation}\label{eq:original_polynomial}
+    y = a_0 + a_1 x + a_2 x^2 + \ldots + a_{m - 1} x^{m - 1} + a_m x^m,
+\end{equation}
+where the coefficients are determined by the following system of $m + 1$ linear
+equations 
+\begin{alignat}{5}
+    n a_0                          &+ \left( \sum x_i  \right) a_1       &&+ \left( \sum x_i^2  \right) a_2       &&+ \cdots &&+ \left( \sum x_i^m  \right) a_m     &&= \sum y_i       ,\\
+    \left( \sum x_i  \right) a_0   &+ \left( \sum x_i^{2}  \right) a_1   &&+ \left( \sum x_i^3  \right) a_2       &&+ \cdots &&+ \left( \sum x_i^{m+1}  \right) a_m &&= \sum x_i y_i   ,\\
+    \left( \sum x_i^2  \right) a_0 &+ \left( \sum x_i^{3}  \right) a_1   &&+ \left( \sum x_i^4  \right) a_2       &&+ \cdots &&+ \left( \sum x_i^{m+2}  \right) a_m &&= \sum x_i^2 y_i ,\\
+    \notag
+                                   & && && \hspace{0.6cm} \vdots && && \\
+    \left( \sum x_i^m  \right) a_0 &+ \left( \sum x_i^{m+1}  \right) a_1 &&+ \left( \sum x_i^{m + 2}  \right) a_2 &&+ \cdots &&+ \left( \sum x_i^{2m}  \right) a_m  &&= \sum x_i^m y_i.
+\end{alignat}
+
+In order to solve the system of linear equations, it can be written as 
+\begin{equation}\label{eq:ecuacion_sistema_matricial}
+    \mat{A} \mat{x} = \mat{b},
+\end{equation}
+where $\mat{A}$ is the coefficients (square) matrix
+\begin{equation}
+    \mat{A} = 
+    \begin{pmatrix}
+        n                           & \left( \sum x_i  \right)        & \left( \sum x_i^2  \right)        & \cdots & \left( \sum x_i^m  \right)      \\
+        \left( \sum x_i  \right)    & \left( \sum x_i^{2}  \right)    & \left( \sum x_i^3  \right)        & \cdots & \left( \sum x_i^{m+1}  \right)  \\
+        \left( \sum x_i^2  \right)  & \left( \sum x_i^{3}  \right)    & \left( \sum x_i^4  \right)        & \cdots & \left( \sum x_i^{m+2}  \right)  \\
+        \vdots & \vdots & \vdots &  \ddots & \vdots \\
+        \left( \sum x_i^m  \right)  & \left( \sum x_i^{m+1}  \right)  & \left( \sum x_i^{m + 2}  \right)  & \cdots & \left( \sum x_i^{2m}  \right)   \\
+    \end{pmatrix},
+\end{equation}
+$\mat{x}$ is the variables (column) vector to solve for and $\mat{b}$ the
+right-hand side (column) vector
+\begin{equation}
+    \mat{x} =
+    \begin{pmatrix}
+        a_0 \\
+        a_1 \\
+        a_2 \\
+        \vdots \\
+        a_m \\
+    \end{pmatrix}, \qquad
+    \mat{b} =
+    \begin{pmatrix}
+        \sum y_i        \\
+        \sum x_i y_i    \\
+        \sum x_i^2 y_i  \\
+        \vdots \\
+        \sum x_i^m y_i \\
+    \end{pmatrix}.
+\end{equation}
+
+Sticking the column vector $\mat{b}$ to the right of $\mat{A}$, the augmented
+matrix $\mat{M} = \mat{A} \sqcup \mat{b}$ is constructed 
+\begin{equation}
+    \mat{M} = \mat{A} \sqcup \mat{b} = 
+    \begin{amatrix}{5}
+        n                           & \left( \sum x_i  \right)        & \left( \sum x_i^2  \right)        & \cdots & \left( \sum x_i^m  \right) & \sum y_i \\ 
+        \left( \sum x_i  \right)    & \left( \sum x_i^{2}  \right)    & \left( \sum x_i^3  \right)        & \cdots & \left( \sum x_i^{m+1}  \right)  & \sum x_i y_i \\
+        \left( \sum x_i^2  \right)  & \left( \sum x_i^{3}  \right)    & \left( \sum x_i^4  \right)        & \cdots & \left( \sum x_i^{m+2}  \right)  & \sum x_i^{2} y_i \\
+        \vdots & \vdots & \vdots &  \ddots & \vdots & \vdots \\
+        \left( \sum x_i^m  \right)  & \left( \sum x_i^{m+1}  \right)  & \left( \sum x_i^{m + 2}  \right)  & \cdots & \left( \sum x_i^{2m}  \right)   & \sum x_i^{m} y_i \\
+    \end{amatrix}
+\end{equation}
+
+Then, reducing $\mat{A}$ from the augmented matrix either to a triangular form (with Gauss elimination)
+of fully reduced to diagonal form (with Gauss-Jordan or backsubstitution), the system
+is solved (except the case that the system is singular).
+
+The Gauss elimination method is based in two elementary facts (facts about
+interchanging columns are omitted as only partial pivoting is going to be
+used in this case):
+\begin{itemize}
+    \item The interchange of any two rows of $\mat{A}$ and the corresponding rows of
+        $\mat{b}$ does not change the solution for $\mat{x}$, as it corresponds to writing
+        the same set of linear equations in a different order.
+    \item Likewise, the solution
+        set is unchanged if any row in $\mat{A}$ is replaced by a linear combination
+        of itself and any other row, as long as the same linear combination is done
+        for $\mat{b}$. 
+\end{itemize}
+
+Then, Gauss elimination is, basically, a method to reduce a matrix to a triangular
+matrix, with diagonal elements equal to one, by performing row operations.
+Essentially, the steps for the Gauss elimination are:
+\begin{enumerate}
+    %
+    \item Check that the element $a_{i,i}$ (pivot) is not null. In case it is, the row is
+        interchanged with other row with element $a_{j,i}\ \left( j > i \right)$ 
+        not null (\textit{partial pivoting}).
+        In this case, the row with largest (in magnitude) available element
+        is picked as the pivot.
+    %
+    \item Divide the $i$-th row by the pivot $a_{ii}$, so it becomes 1, $a_{i,i} \to 1$ (normalisation)
+    %
+    \item Substract the right amount of the $i$-th row, $\alpha A\left( i, : \right)$,
+        from each other row to make all remaining $a_{j,1} = 0\ \left( j > i \right)$.
+        The \textit{right amount}, $\alpha$, can be trivially found, as 
+        \begin{equation}
+            a_{j,i} - \alpha a_{i,i} = 0
+            \implies
+            \alpha = \frac{ a_{j,i} }{a_{i,i}}.
+        \end{equation}
+        
+        Then, the linear combination to apply is 
+        \begin{equation}
+            A\left( j,: \right) \leftarrow A\left( j,: \right) - \frac{ a_{j,i} }{a_{i,i}} A\left( i,: \right).
+        \end{equation}
+    %
+    \item Repeat for the rest of the columns.
+    %
+    \item Lastly, once all columns are transformed, check if $a_{n,n} = 0$. 
+        If this is the case, the system is singular.
+    %
+\end{enumerate}
+
+The algorithm used in this program, based in this scheme, is explained in detail
+in the \nameref{descripcion_programa} section.
+
+Then, after applying Gauss elimination over $\mat{A} \sqcup \mat{b} \to \mat{A'} \sqcup \mat{b'}$, $\mat{A'}$ 
+is triangular. Then, $\mat{x}$ from \cref{eq:ecuacion_sistema_matricial} can be solved by
+backsubstitution. The last element of $\mat{x}$, $x_{n}$, is given by 
+\begin{equation}
+    x_{n} = \frac{ b'_n }{a'_{n,n}},
+\end{equation}
+and the next, by 
+\begin{equation}
+    x_{n - 1} = \frac{1}{a'_{n-1, n-1}} \left( b'_{n - 1} - x_{n} a'_{n-1,n} \right).
+\end{equation}
+
+Then, the solution to the set of equations, $x_{i}$, is given by 
+\begin{equation}
+    x_i =
+    \frac{1}{a_{i,i}'} \left( b'_i - \sum_{j = i + 1}^{n} x_{i,j}' x_{j} \right).
+\end{equation}
+
+Also, the triangular shape matrix $\mat{A'}$ can be further reduced up to a
+diagonal form, so it already yields the solution to the system of linear equations.
+It can be achieved as the Gauss elimination, but also performing row operations
+over the elements above the pivot, i.e. repeating steps 1 and 3 of the Gauss 
+elimination but considering all $j \not = i$, not only $j > i$. It is called
+Gauss-Jordan elimination.
+
+The result of the Gauss-Jordan elimination is, therefore, a matrix $\mat{A'} \sqcup \mat{b'}$
+where $\mat{A'}$ is diagonal and, then, the solutions for $\mat{x}$ are simply the
+new elements of $\mat{b'}$ 
+\begin{equation}
+    x_i = b'_{i}, \quad i = 1, 2, \ldots m + 1.
+\end{equation}
+
+Finally, in \cref{eq:original_polynomial}, the fitted polynomial can be written as
+\begin{equation}\label{eq:general_fitted_polynomial}
+    y = f\left( x \right) = b'_1 + b'_2 x + b'_3 x^2 + \ldots + b'_{m} x^{m - 1} + b'_{m+1} x^m,
+    \qquad b'_i = x_i = \left( \mat{x} \right)_i.
+\end{equation}
+
+The quality of the fit can be checked calculating the coefficient of determination,
+$R^{2}$ 
+\begin{equation}
+    R^2 = 1 - \frac{ SS_{\text{res}} }{SS_{\text{tot}}},
+\end{equation}
+where $SS_{\text{res}}$ is the residual sum of squares 
+\begin{equation}
+    SS_{\text{res}} = \sum_{i = 1}^{n} \left( y_i - f\left( x_i \right)  \right)^2,
+\end{equation}
+and $SS_{\text{tot}}$ is the total sum of squares 
+\begin{equation}
+    SS_{\text{tot}} = \sum_{i = 1}^{n}  \left( y_i - \overline{y} \right)^2.
+\end{equation}
+
+% ------
+\section{Description of the program}\label{descripcion_programa}
+% ------
+
+The program is structured in
+\begin{itemize}
+    \item Main file: \inline{main.f90}
+        \item Module containing procedures for input/output purposes: \inline{modules/io.f90}
+        \item Module containing the procedures needed to perform Gauss elimination,
+            backsubstitution and Gauss-Jordan elimination: \inline{module/gauss_jordan.f90}
+        \item Module containing the procedures needed for the regression analysis: 
+            \inline{modules/polynomial_regression.f90}
+        \item Data files: input file, \inline{data(input.dat}, and output file
+            \inline{data/output.dat}
+        \item Plots: \inline{graph/} folder
+\end{itemize}
+
+Ignoring the \inline{main.f90} file and \inline{io.f90} module, which content is
+senseless to explain, the modules containing the needed algorithms consist of:
+
+% ---------
+\subsection{Gauss, Backsubstitution and Gauss-Jordan}
+% ---------
+The procedures needed to solve for the linear system are contained in the 
+\inline{module/gauss_jordan.f90} module. These procedures are: Gauss elimination
+(procedure \textsc{GaussElimination}), Gauss-Jordan elimination 
+(procedure \textsc{Jordan}) and backsubstitution (procedure \textsc{BackSubstitution}).
+
+\begin{itemize}
+    \item \textbf{Gauss elimination}: the algorithm basically follows the steps
+        given in the \nameref{theoretical_background} section. The algorithm
+        is \cref{al:gauss_elimination}.
+        \begin{algorithm}
+            \caption{Gauss elimination}\label{al:gauss_elimination}
+            \begin{algorithmic}[1]
+                \Procedure{GaussElimination}{$\mat{M}$, $\varepsilon$}
+
+                \Input Matrix to reduce, $\mat{M}$;
+                tolerance for the method, $\varepsilon$ 
+
+                \Output Reduced to triangular form matrix, $\mat{M'} \leftarrow \mat{M}$
+
+                \State Get number of rows of input matrix $\mat{M}$, $n_{\text{r}}$,
+                and number of columns, $n_{\text{c}}$ 
+                \For {$i \leftarrow 1, n_{\text{r}}$}
+                    \If {$\left| M_{i,i} \right| < \varepsilon$}
+                        \State Swap the $i$-th row, $M\left( i,: \right)$, with
+                        the $j$-th row which element $M\left( j,i \right)\ \left( \forall j > i \right)$
+                        is the largest absolute value of the $i$-th column,
+                        $M\left( i,k \right) \leftarrow \left| M\left( :,i \right) \right|$
+                            \State $t\left( : \right) \leftarrow M\left( i,: \right)$
+                            \State $M\left( i,: \right) \leftarrow M\left( k,: \right)$
+                            \State $M\left( k,: \right) \leftarrow t\left( : \right)$
+                    \EndIf
+                    \State Make the pivot $M_{i,i} = 1 \leftarrow M\left( i,: \right) / M\left( i,i \right)$
+                    \For {$j \leftarrow i + 1, n_{\text{r}}$}
+                        \Comment Make $M_{j,i} = 0\ \left( \forall j > i \right)$
+                        \State $M_{j,i} \leftarrow M(j,:) = M(j,:) - \left( M(j,i)/M(i,i) \right) M(i,:)$
+                    \EndFor
+                \EndFor
+                \If {$\left| M\left( n_{\text{r}}, n_{\text{c}} \right) \right| < \varepsilon$}
+                    \textbf{write} The system is singular
+                \EndIf
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+
+    \item \textbf{Backsubstitution}: the algorithm is \cref{al:backsubstitution}.
+        \begin{algorithm}
+            \caption{Backsubstitution}\label{al:backsubstitution}
+            \begin{algorithmic}[1]
+                \Procedure{Backsubstitution}{$\mat{A}$, $\mat{b}$, $\mat{x}$}
+
+                \Input Triangular form coefficient matrix, $\mat{A}$;
+                right-hand side coefficients column vector, $\mat{b}$
+
+                \Output Solution column vector, $\mat{x}$
+
+                \State Get number of rows of input matrix $\mat{A}$, $n_{\text{r},A}$ 
+                \State Get size of column vector $\mat{b}$, $n_{\text{r},b}$ 
+                \If {$n_{\text{r},A} \not = n_{\text{r},b}$}
+                    \textbf{stop}
+                \EndIf
+                \State Initialize $x\left( n_{\text{r},A} \right)$
+                \For {$i \leftarrow n_{\text{r}}, 1, -1$}
+                    \Comment Compute elements of $\mat{x}$, $x_i = 1/a_{i,i} \left( b_i - \sum_{j=i+1}^N a_{i,j} x_j \right)$
+                    \State $s = 0$
+                    \For {$j \leftarrow i + 1, n_{\text{r}}$}
+                        \State  $s = s + a_{i,j} x_j$
+                    \EndFor
+                    \State  $x_i = 1/a_{i,i} \left( b_i - s \right)$
+                \EndFor
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+
+    \item \textbf{Gauss-Jordan elimination}: the algorithm is \cref{al:jordan}.
+        \begin{algorithm}
+            \caption{Gauss-Jordan elimination}\label{al:jordan}
+            \begin{algorithmic}[1]
+                \Procedure{Jordan}{$\mat{M}$, $\mat{x}$}
+
+                \Input Augmented triangular matrix, $\mat{M} = \mat{A} \sqcup \mat{b}$
+
+                \Output Solution column vector, $\mat{x}$
+
+                \State Get number of rows of input matrix $\mat{M}$, $n_{\text{r}}$,
+                and columns $\mat{M}$, $n_{\text{c}}$ 
+                \State Initialize $x\left( n_{\text{r}} \right)$
+                \For {$i \leftarrow n_{\text{r}}, 1, -1$}
+                    \Comment Make $\mat{A}$ diagonal
+                    \For {$j \leftarrow i - 1, 1, -1$}
+                    \State  $M\left( j,: \right) \leftarrow M\left( j,: \right) - \left[ M\left( j,i \right) / M\left( i,i \right) \right] M\left( i,: \right)$
+                    \EndFor
+                \EndFor
+                \State $\mat{x} \leftarrow M\left( :, n_{\text{c}} \right)$
+                \Comment Store coefficient vector $\mat{b}$ in the solution vector $\mat{x}$
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+\end{itemize}
+
+
+% ---------
+\subsection{Augmented matrix, fitted polynomial, $R^2$ coefficient}
+% ---------
+The procedures needed to perform the regression analysis are contained in the 
+\inline{module/polynomial_regression.f90} module. These procedures are: creation
+of the augmented matrix (procedure \textsc{AugmentedMatrix}), function for the 
+fitted polynomial (procedure \textsc{FittedPolynomial}) and calculation of the
+determination coefficient $R^2$ (procedure \textsc{RCoeff}).
+
+\begin{itemize}
+    \item \textbf{Augmented matrix}: subroutine to create the augmented matrix
+        by calculating all necessary sums for a polynomial of arbitrary degree, $m$,
+        that fits into the data, inputted as the matrix $\mat{D}$. The creation of
+        the augmented matrix from the set of $\left( x,y \right)$ data is explained in
+        \cref{al:augmented_matrix}.
+        \begin{algorithm}
+            \caption{Creation of the augmented matrix}\label{al:augmented_matrix}
+            \begin{algorithmic}[1]
+                \Procedure{AugmentedMatrix}{$\mat{D}$, $m$, $\mat{M}$}
+
+                \Input Data matrix, $\mat{D}$, such that $x \leftarrow D\left( :,1 \right)$ 
+                and $y \leftarrow D\left( :,2 \right)$;
+                degree of the polynomial, $m$ 
+
+                \Output Augmented matrix, $\mat{M}$
+
+                \State Get number of data, number of rows of $\mat{D}$, $n$
+                \State Initialize $M\left( m+1, m+1 \right)$
+
+                \For {$i \leftarrow 1, m + 1$}
+                    \For {$i \leftarrow 1, m + 1$}
+                        \State $M_{j,i} = \sum_{k = 1}^{n} D_{j,1}^{i + j - 2}$
+                        \State $M_{i,j} = M_{j,i}$
+                    \EndFor
+                    \State $M_{i, m+2} = \sum_{k = 1}^{n} D_{j,1}^{i - 1} D_{j,2}$
+                \EndFor
+
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+
+    \item \textbf{Fitted polynomial}: the algorithm is \cref{al:fitted_poly}.
+        \begin{algorithm}
+            \caption{Fitted polynomial function}\label{al:fitted_poly}
+            \begin{algorithmic}[1]
+                \Function{FittedPolynomial}{$\mat{c}$, $x$}
+
+                \Input Coefficients vector, $\mat{c}$;
+                independent variable, $x$, at which the function is evaluated
+
+                \Output Fitted polynomial, $f$, evaluated at $x$, $f\left( x \right)$
+
+                \State Get number of coefficients vector, 
+                $m \leftarrow \mathrm{size}\left( \mat{c} \right)$
+
+                \State Initialize $f = 0$
+
+                \For{$i \leftarrow 1, m$}
+                    \State $f = f + c_i x^{i - 1}$
+                \EndFor
+
+                \EndFunction
+            \end{algorithmic}
+        \end{algorithm}
+    %
+    \item \textbf{$R^{2}$ determination coefficient}: the algorithm is \cref{al:R2_coefficient}.
+        \begin{algorithm}
+            \caption{$R^{2}$ determination coefficient}\label{al:R2_coefficient}
+            \begin{algorithmic}[1]
+                \Procedure{RCoeff}{$\mat{x}$, $\mat{y}$, $\mat{c}$, $R^2$}
+
+                \Require \textsc{FittedPolynomial}$\left( \mat{c},\ x \right)$
+
+                \Input Data vectors, $\mat{x}$ and $\mat{y}$;
+                polynomial coefficients vector, $\mat{c}$
+
+                \Output Determination coefficient, $R^2$
+
+                \State Get sizes of data vectors
+                $n_x \leftarrow \mathrm{size}\left( \mat{x} \right)$,
+                $n_y \leftarrow \mathrm{size}\left( \mat{y} \right)$,
+
+                \If{$n_x \not = n_y$}
+                    \textbf{stop}
+                \Else
+                    $n \leftarrow n_x$
+                \EndIf
+
+                \State Calculate mean value of $y$ data,
+                $\overline{y} \leftarrow \left( \sum_{i = 1}^{n} y_i \right) / n$
+                \State Initialize sum of residual squares, $SS_{\text{res}} = 0$
+                \State Initialize total sum of squares, $SS_{\text{tot}} = 0$
+                \For{$i \leftarrow 1, n$}
+                    \State $SS_{\text{res}} = SS_{\text{res}} + \left( y_i - f\left( \mat{c}, x_i \right) \right)^{2}$
+                    \Comment Calculate the residual sum of squares, $SS_{\text{res}}$
+                    \State $SS_{\text{tot}} = SS_{\text{tot}} + \left( y_i - \overline{y} \right)^{2}$
+                    \Comment Calculate total sum of squares, $SS_{\text{tot}}$
+                \EndFor
+                \State Calculate $R^2 \leftarrow 1 - \left( SS_{\text{res}} / SS_{\text{tot}} \right)$
+                \EndProcedure
+            \end{algorithmic}
+        \end{algorithm}
+\end{itemize}
+
+% ------
+\section{Results}
+% ------
+
+% ---------
+\subsection{Exercise 5}
+% ---------
+The $\left( x,y \right)$ data points are plotted along with the fitted
+polynomial in \cref{fig:ex5}.
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{ex5-plot.pgf}
+    \caption{Data points and fitted polynomial of exercise 5.}
+    \label{fig:ex5}
+\end{figure}
+
+% ---------
+\subsection{Exercise 6}
+% ---------
+The $\left( x,y \right)$ data points are plotted along with the fitted
+polynomial in \cref{fig:ex6}.
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{ex6-plot.pgf}
+    \caption{Data points and fitted polynomial of exercise 6.}
+    \label{fig:ex6}
+\end{figure}
+% ---------
+\subsection{Exercise 7}
+% ---------
+The $\left( x,y \right)$ data points are plotted along with the fitted
+polynomial in \cref{fig:ex7}.
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{ex7-plot.pgf}
+    \caption{Data points and fitted polynomial of exercise 7.}
+    \label{fig:ex7}
+\end{figure}
+% ---------
+\subsection{Exercise 8}
+% ---------
+The $\left( x,y \right)$ data points are plotted along with the fitted
+polynomial in \cref{fig:ex8}.
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{ex8-plot.pgf}
+    \caption{Data points and fitted polynomial of exercise 8.}
+    \label{fig:ex8}
+\end{figure}
+% ---------
+\subsection{Exercise 9}
+% ---------
+The $\left( x,y \right)$ data points are plotted along with the fitted
+polynomial in \cref{fig:ex9}.
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{ex9-plot.pgf}
+    \caption{Data points and fitted polynomial of exercise 9.}
+    \label{fig:ex9}
+\end{figure}
