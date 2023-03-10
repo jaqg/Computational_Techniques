@@ -50,7 +50,7 @@ module mymodule
         !
     end function hk 
     !
-    subroutine RombergIA(lil, uil, threshold, Rmat, findex, sindex, convR, &
+    subroutine RombergIA(lil, uil, threshold, nR, Rmat, findex, sindex, convR,&
                         & totiter, uf)
         !
         ! Subroutine for the Romberg integration algorithm (RIA)
@@ -58,6 +58,7 @@ module mymodule
         ! lil           real, doule precision
         ! uil           real, doule precision
         ! Rmat          real, doule precision array
+        ! nR            integer, single precision
         ! findex        integer, single precision
         ! sindex        integer, single precision
         ! convR         real, doule precision
@@ -65,6 +66,7 @@ module mymodule
         !
         ! lil: lower integration limit
         ! uil: upper integration limit
+        ! nR: size of the Romberg matrix
         ! Rmat: table of elements R(k,j) of the results of the integral
         ! findex: first index of the converged value of matrix R(k,j) -> k
         ! sindex: second index of the converged value of matrix R(k,j) -> j
@@ -74,16 +76,21 @@ module mymodule
         implicit none
         !
         real(kind=8), intent(in) :: lil, uil, threshold
-        integer, intent(in) :: uf
-        real(kind=8), dimension(10,10), intent(out) :: Rmat
+        integer, intent(in) :: uf, nR
+        real(kind=8), dimension(:,:), allocatable, intent(out) :: Rmat
         integer, intent(out) :: findex, sindex
         real(kind=8), intent(out) :: convR
         integer(kind=8), intent(out) :: totiter
         !
         ! Dummmy variables
         !
-        integer :: i, j, k, iterstep, dummyvar
+        integer :: i, j, k, ierr, iterstep, dummyvar
         real(kind=8) :: Rtmp, diffR
+        !
+        ! Allocate Romberg matrix
+        !
+        allocate(Rmat(nR, nR), stat=ierr)
+        if (ierr .ne. 0) stop 'RombergIA: Error in allocation of Rmat'
         !
         ! Intro message
         !

@@ -9,5 +9,5 @@ Quadrature pts   Integral value   Difference
          9       1.05765067       0.00000118
         10       1.05765069       0.00000002
 
-Number of quadrature points employed:10
+Number of quadrature points employed: 10
 Final value of the quadrature:    1.05765069

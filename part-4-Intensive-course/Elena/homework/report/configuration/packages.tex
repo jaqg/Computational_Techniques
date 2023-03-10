@@ -56,6 +56,7 @@
 % --- Tablas ---
 %
 \usepackage{booktabs}
+\usepackage{tabularx}
 % \usepackage{tablefootnote}
 \newcommand{\ra}[1]{\renewcommand{\arraystretch}{#1}} % Spacing btween lines of table
 \usepackage{longtable}
@@ -80,6 +81,8 @@
 \usepackage{physics}
 \usepackage{braket}
 \pdfsuppresswarningpagegroup=1
+% \newtheorem{theorem}{Theorem}[section] % numerado por secciones
+\newtheorem{theorem}{Theorem}
 %
 % --- Química ---
 %
@@ -91,6 +94,12 @@
 % --- Programming/Code ---
 %
 \usepackage{verbatimbox} % Centrar código con verbatim
+\usepackage{algorithm} % paquete para pseudocodigo
+\usepackage[noend]{algpseudocode} % quita cierre de entornos
+% \usepackage{algpseudocode}
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
 %
 % --- Referencias ---
 %

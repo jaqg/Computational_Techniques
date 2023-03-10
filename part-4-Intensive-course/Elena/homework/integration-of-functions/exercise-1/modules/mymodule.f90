@@ -140,7 +140,8 @@ module mymodule
             !
             ! Print results
             !
-            write(uf,'(1(i10, 4x), 3(f13.8, 4x))') iterstep, h, IRC, diffIRC
+            ! write(uf,'(1(i10, 4x), 3(f13.8, 4x))') iterstep, h, IRC, diffIRC
+            write(uf,'(2(i10, 4x), 2(f13.8, 4x))') iterstep, j, IRC, diffIRC
             !
             ! Iterate over j
             !

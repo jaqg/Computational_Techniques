@@ -1,0 +1,417 @@
+\graphicspath{{./figures/}}
+% --------------------------
+\part{Numerical integration}
+% --------------------------
+To calculate the integral 
+\begin{equation}\label{eq:integral}
+    I = \int_1^3 \sin \left( x^2 \right) - \cos \left( 2x \right) \dd{x},
+\end{equation}
+the following numerical integrations methods have been used.
+
+% ------
+\section{Composite Simpson rule}
+% ------
+The commposite Simpson rule (CSR) is one of the Newton-Cotes integration rules,
+an interpolation method based on equidistant interpolation bascissas in a $\left[ a,b \right]$ 
+interval 
+\begin{equation}
+    I_{\text{rule}} 
+    = \int_a^b P_{n-1} \left( x \right) \dd{x} 
+    = \sum_{i = 1}^{n} f\left( x_i \right) \underbrace{\int_a^b \prod_{j=1,j\not=i}^{n} \frac{ x - x_j }{x_i - x_j} \dd{x}}_{\omega_i} ,
+\end{equation}
+where $n$ is the number of interpolating points (abscissa points). 
+For each value of $n$, there is a named rule. For the Simpson rule, $n = 3$.
+
+Also, for each one of these methods, there are two rules: simple rule and composite rule.
+
+The simple rule considers the whole interval, $\dd{x} = b - a = h$ or $\dd{x} = (b - a) / 2 = h$ 
+for the Simpson method.
+
+For the composite rule, a number of subintervals, $N$, is used to evaluate the integral. 
+Defining the subinterval spacing, $h$, as 
+\begin{equation}
+    h = \frac{ b - a }{2N},
+\end{equation}
+the abscissa points, $x_i$, where the function is evaluated are given by 
+\begin{equation}
+    x_i = a + ih, \qquad i = 0, \ldots , 2N
+\end{equation}
+
+Then, the integral is evaluated as 
+\begin{equation}
+    I_{\text{CS}} =
+    \frac{h}{3} \left[ f\left( a \right) + f\left( b \right) +
+    2 \sum_{i = 2\, \text{(even)}}^{2N - 2} f\left( x_i \right) +
+    4 \sum_{i = 1\, \text{(odd)}}^{2N - 1}  f\left( x_i \right) \right],
+\end{equation}
+with an error of the order $\ord{h^5}$
+\begin{equation}
+    E_{\text{CS}} =
+    - N \times \frac{ f^4 \left( \xi \right) }{90} \times h^5 
+    = \ord{h^5},
+    \qquad \xi \in \left[ a,b \right].
+\end{equation}
+
+To compute the integral in \cref{eq:integral}, the calculation starts with
+$N = 1$ subinterval points, doubling in each iteration until reaching a 
+convergence (difference between a result and the preceding one) of $10^{-8}$.
+
+Then, the basic structure of the algorithm is the following (\cref{al:simpson_composite_algorithm}).
+\begin{algorithm}
+    \caption{Composite Simpson rule}\label{al:simpson_composite_algorithm}
+    \begin{algorithmic}[1]
+        \Procedure{SimpsonCompositeNCM}{$a$, $b$, $N_0$, $\varepsilon$, $I$, $t$}
+
+        \Input Integration limits, $a$, $b$ ; starting number of subinterval
+        points, $N_0$ ; threshold for convergence, $\varepsilon$ 
+
+        \Output Value of the integral, $I$ ; total number of iterations, $t$
+
+        \State Initialize the number of subintervals, $N = N_0$, value of
+        the integral, $I = 0$, and number of iterations $t = 0$
+        \While {$\Delta I < \varepsilon$}
+            \State Calculate subinterval spacing, $h$, and abscissa points, $x_i$
+            \State Calculate the new value of the integral, $I'$
+            \State Calculate the convergence, $\Delta I = \left| I' - I \right|$
+            \State Update value of the integral, $I = I'$
+            \State Update number of iterations, $t = t + 1$
+        \EndWhile
+
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+The results are collected in \cref{tab:results_simpson}.
+
+\begin{table}[tb!]
+    \ra{1.2} % Spacing btween lines of table
+    \caption{Results from the composite Simpson rule}
+    \label{tab:results_simpson}
+    \centering
+    \begin{tabular}{@{}c c c c@{}}
+        \toprule
+        Iteration, $t$ & Subinterval number, $N$ & Integral value, $I_{\text{CS}}$ & Difference, $\Delta I$ \\
+        \midrule
+
+         1 &           1 &     0.09897684 &     0.09897684 \\
+         2 &           2 &     1.05135757 &     0.95238073 \\
+         3 &           4 &     1.06287028 &     0.01151271 \\
+         4 &           8 &     1.05794291 &     0.00492737 \\
+         5 &          16 &     1.05766834 &     0.00027457 \\
+         6 &          32 &     1.05765178 &     0.00001656 \\
+         7 &          64 &     1.05765076 &     0.00000103 \\
+         8 &         128 &     1.05765069 &     0.00000006 \\
+
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Summarizing, the results are
+\begin{itemize}
+    \item Number of iterations needed: 9
+    \item Final subinterval value: 0.00390625
+    \item Number of subintervals: 256
+    \item Number of abscissa points: 257
+    \item Final value of the quadrature: 1.05765069
+\end{itemize}
+
+% ------
+\section{Romberg's method}
+% ------
+The Romberg integration is an extrapolation method based in the terative Richardson
+extrapolation applied on the Composite Trapezoidal Rule $n = 2$ function.
+
+The Richardson extrapolation method aims to speed up the convergence of a sequence,
+based on the extrapolation of two function values calculated at $\lim_{h \to 0} R\left( h \right)$ 
+and $\lim_{h \to 0} R\left( \frac{h}{2} \right)$, eliminating the errors of the form
+$E\left( h \right) = C h^n$. A function, $G\left( h \right)$, is approximated by
+$R\left( h_1 \right)$ (where $h_1 = x_a - x_0$) and by $R\left( h_2 \right)$ 
+(where $h_2 = \frac{h_1}{2} = x_b - x_0$), resulting in less rounding errors
+and/or less number of calculations 
+\begin{equation}
+    G\left( h \right) = 
+    \frac{ 2^{n} R\left( h / 2 \right) - R\left( h \right) }{2^{n} - 1}.
+\end{equation}
+
+The Romberg method provides two mechanisms to improve the accuracy: reduce the
+value of the subinterval spacing, $h$, and apply Richardson extrapolation.
+
+Then, the value of the integral is given by 
+\begin{equation}
+    I_{CT} =
+    \int_a^b f\left( x \right) \dd{x} \approx
+    \frac{ h_k }{2} \left[ f\left( a \right) + f\left( b \right) + 2 \sum_{i = 1}^{N - 1} f\left( x_i \right) \right],
+\end{equation}
+where the spacing $h = h_k$ is now reduced as 
+\begin{equation}
+    h_k = \frac{ b - a }{N} = \frac{ b - a }{2^{k-1}}, \qquad k = 1, 2, 3, \ldots
+\end{equation}
+
+Richardson extrapolation is applied $k-1$ times for each $k$ value to the previously
+computed approximation, so both mechanisms are applied simultaneously.
+Basically, $k$ is the number of different values of $h$ computed initially related
+to the number of trapezoids (subintervals).
+
+Then, the Romberg matrix, $\mat{R}$, is computed as
+\begin{align}
+    R_{11} &= \frac{h_1}{2} \left[ f\left( a \right) + f\left( b \right) \right], \\
+    R_{k,1} &= \frac{1}{2} \left[ R_{k-1,1} + h_{k-1} \sum_{i = 1}^{2^{k-2}} f\left( a + \left( 2i - 1 \right)h_k \right) \right], \quad k>1=j, \\
+    R_{k,j} &= R_{k,j-1} + \frac{ R_{k,j-1} - R_{k-1,j-1} }{4^{j-1} - 1}, \quad k\ge j > 1,
+\end{align}
+or 
+\begin{equation}
+    \mat{R} = 
+    \begin{pmatrix}
+        R_{11} & & & & \\
+        R_{21} & R_{22} & & & \\
+        R_{31} & R_{32} & R_{33} & & \\
+        R_{41} & R_{42} & R_{43} & R_{44} & \cdots \\
+        \vdots & \vdots & \vdots & \vdots & \ddots \\
+        \uparrow & \uparrow & \uparrow & \uparrow &  \\
+        \ord{h^{2}} & \ord{h^{4}} & \ord{h^{6}} & \ord{h^{8}} & \cdots \\
+    \end{pmatrix}.
+\end{equation}
+
+The algorithm is the following (\cref{al:romberg_algorithm}).
+\begin{algorithm}
+    \caption{Romberg method}\label{al:romberg_algorithm}
+    \begin{algorithmic}[1]
+        \Procedure{RombergIA}{$a$, $b$, $\varepsilon$, $n$, $\mat{R}$, $I$, $r_1$, $r_2$, $t$ }
+
+        \Input Integration limits, $a$, $b$;
+        threshold for convergence, $\varepsilon$;
+        dimensions of the Romberg matrix, $n$
+
+        \Output Romberg matrix, $\mat{R}$;
+        Converged value of the integral, $I$ ;
+        position of the converged element, $R\left( r_1, r_2 \right)$;
+        number of iterations until convergence, $t$
+
+        \State Initialize Romberg matrix, $\mat{R} = 0$; 
+        number of iterations, $t' = 1$;
+        dummy variable $d = 0$
+
+        \State Compute the first element, $R_{1,1}$
+
+        \For {$i \leftarrow 2, n$}
+            \State Compute $R_{i, 1}$
+            \For {$j \leftarrow 2, i$}
+                \State Compute $R_{i, j}$
+                \State Calculate the difference with the previous value,
+                $\Delta R = \left| R_{i,j} - R_{i,j-1} \right|$
+                \If {$\Delta R < \varepsilon$ \newand $d = 0$}
+                    \State Store the converged value, $I = R_{i,j}$
+                    \State Store the indexes of the converged value, $r_1 = i$
+                    and $r_2 = j$ 
+                    \State Store number of iterations until convergence, $t = t'$
+                    \State Update a dummy variable to not reassign 
+                    $r_1$ and $r_2$ after convergence, $d = 1$
+                \EndIf
+                \State Update number of iterations, $t' = t' + 1$
+            \EndFor
+        \EndFor
+
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+To compute the integral, $n = 10$ is chosen so the $10\times 10$ Romberg matrix is
+computed, although the convergence criteria of $\varepsilon = 10^{-8}$ is followed
+to store both the converged value and its position in the matrix.
+
+The resulting $10\times 10$ Romberg matrix is printed in \cref{tab:results-romberg},
+and the converged value is
+\begin{itemize}
+    \item $R_{7,5} = 1.05765069$
+    \item Number of iterations: 25
+\end{itemize}
+
+\begin{table}[tb!]
+    \ra{1.2} % Spacing btween lines of table
+    \caption{Resulting $10 \times 10$ Romberg matrix.}
+    \label{tab:results-romberg}
+    \centering
+    { \tiny
+        \begin{tabular}{@{}c | c c c c c c c c c c@{}}
+            \toprule
+            $\mat{R} $& 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+            \midrule
+
+            1  & 0.70956602 & & & & & & & & & \\
+            2  & 0.25162414 & 0.09897684 & & & & & & & & \\
+            3  & 0.85142421 & 1.05135757 & 1.11484962 & & & & & & & \\
+            4  & 1.01000877 & 1.06287028 & 1.06363780 & 1.06282491 & & & & & & \\
+            5  & 1.04595938 & 1.05794291 & 1.05761442 & 1.05751881 & 1.05749800 & & & & & \\
+            6  & 1.05474110 & 1.05766834 & 1.05765004 & 1.05765060 & 1.05765112 & 1.05765127 & & & & \\
+            7  & 1.05692411 & 1.05765178 & 1.05765068 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & & & \\
+            8  & 1.05746909 & 1.05765076 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & & \\
+            9  & 1.05760529 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & \\
+            10 & 1.05763934 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 & 1.05765069 \\
+
+            \bottomrule
+        \end{tabular}
+    }
+\end{table}
+
+% ------
+\section{Gauss-Legendre method}
+% ------
+The Gaussian Quadrature is an interpolation method that, unlike the Newton-Cotes
+methods, picks optimal abscissa points, $x_i$, at which the function is evaluated,
+$f\left( x_i \right)$, unequally spaced.
+
+The integration rule is exact for polynomials of degree up to $2n - 1$, where $n$ 
+are the appropriately chosen abscissa points.
+Therefore, the maximum degree of accuracy is $2n - 1$.
+Also, not only the abscissa points can be chosen, but also the weights $\omega_i$.
+
+The integral is evaluated as 
+\begin{equation}
+    \int_a^b f\left( x \right) \dd{x} \approx
+    \int_a^b P_{2n-1} \left( x \right) \dd{x} =
+    \sum_{i = 1}^{n} \omega_i f\left( x_i \right),
+    \qquad i = 1,2,\ldots,n
+\end{equation}
+
+The abscissa points can be found for any particular case based in the Fundamental
+theorem of Gaussian Quadrature~\cite{press1986numerical}.
+\begin{theorem}[Fundamental theorem of Gaussian Quadrature]
+The abscissas of the $n$-point Gaussian quadrature formulas
+with weighting function $W\left( x \right)$ in the interval $\left( a,b \right)$ are precisely the roots
+of the orthogonal polynomial $P_n \left( x \right)$ for the same interval and weighting function.
+\end{theorem}
+
+The solution relates to the orthogonal polynomials generated by the weight 
+function $W\left( x \right)$ 
+\begin{equation}
+    \int_a^b f\left( x \right) \dd{x} \approx
+    \int_c^d W\left( t \right) P_{2n - 1} \left( t \right) \dd{t} =
+    \sum_{i = 1}^{n} \omega_i P\left( t_i \right).
+\end{equation}
+where $t_i$ are the roots of the orthogonal polynomial $P_{2n-1}$ and are not
+equally spaced. Therefore, $P_{2n-1} \left( t \right)$ is optimized for the 
+specific range $t \in \left[ c, d \right]$, and only the roots $t_i$ (abscissa
+points) and weights, $\omega_i$, have to be determined.
+
+In this case, the Gauss-Legendre polynomials are used. The weight functions
+for these polynomials is, simply 
+\begin{equation}
+    W\left( x \right) = 1,
+\end{equation}
+the interval is 
+\begin{equation}
+    -1 < x < 1,
+\end{equation}
+and the recurrence relation, needed to compute the polynomials 
+\begin{equation}
+    \left( k + 1 \right) P_{k + 1} \left( x \right) =
+    \left( 2k + 1 \right) x P_k \left( x \right) - k P_{k - 1} \left( x \right).
+\end{equation}
+
+\begin{algorithm}
+    \caption{Gauss-Legendre method}\label{al:gauss_legendre_algorithm}
+    \begin{algorithmic}[1]
+        \Procedure{GaussQuadrature}{$a$, $b$, $N_0$, $N_{\text{tot}}$, $\varepsilon$, $I$, $t$}
+
+        \Input Integration limits, $a$, $b$;
+        starting number of quadrature points, $N_0$;
+        total number of quadrature points, $N_{\text{tot}}$;
+        threshold for convergence, $\varepsilon$ 
+
+        \Output Value of the integral, $I$;
+        total number of iterations, $t$
+
+        \State Initialize the value of the integral, $I = 0$
+        \State Calculate $c = \left( a + b \right) / 2$ and $m = \left( b - a \right) / 2$ 
+
+        \For {$n \leftarrow N_0, N_{\text{tot}}$}
+        \State Compute the weights, $\omega_i = \left( \mat{\omega} \right)_i$,
+        and $t_i = \left( \mat{t} \right)_{i}$ values with
+            \textsc{GauLeg}$\left( i, \mat{t}, \mat{\omega} \right)$
+
+            \State Compute the integral, 
+            $I' = m \sum_{i = 1}^{n} \omega_i f\left( c + m t_i \right)$
+
+            \State Calculate the difference with the previous value,
+            $\Delta I = \left| I' - I \right|$
+
+            \If {$\Delta I < \varepsilon$ \newand $\Delta I > 0$}
+                \textbf{exit}
+            \EndIf
+
+            \State Update the value of the integral, $I = I'$ 
+
+            \State Update total number of iterations, $t = n$
+        \EndFor
+
+        \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
+
+The results are collected in \cref{tab:results_grauss_legendre}, and
+\begin{itemize}
+    \item Number of quadrature points employed: 10
+    \item Final value of the quadrature: 1.05765069
+\end{itemize}
+
+\begin{table}[htb]
+    \ra{1.2} % Spacing btween lines of table
+    \caption{Results from the Gauss-Legendre method.}
+    \label{tab:results_grauss_legendre}
+    \centering
+    \begin{tabular}{@{}c c c@{}}
+        \toprule
+        Quadrature points & Integral values & Difference, $\Delta I = \left| I_{n+1} - I_{n} \right|$ \\
+        \midrule
+
+         2 &     1.77932651 &     1.77932651 \\
+         3 &     1.02706235 &     0.75226416 \\
+         4 &     1.03224500 &     0.00518265 \\
+         5 &     1.06169102 &     0.02944602 \\
+         6 &     1.05749649 &     0.00419453 \\
+         7 &     1.05763955 &     0.00014306 \\
+         8 &     1.05765184 &     0.00001229 \\
+         9 &     1.05765067 &     0.00000118 \\
+        10 &     1.05765069 &     0.00000002 \\
+
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ------
+\section{Results}
+% ------
+
+The results from the three methods can be summarized as in
+\cref{tab:results_numerical_integration} and \cref{fig:integration_convergence}.
+
+\begin{table}[htb]
+    \ra{1.2} % Spacing btween lines of table
+    \caption{Results from the Composite Simpson rule, Romberg's method and
+    Gauss-Legendre method.}
+    \label{tab:results_numerical_integration}
+    \centering
+    \begin{tabular}{@{}c c c@{}}
+        \toprule
+        Method & Total number of iterations & Execution time (ms) \\
+        \midrule
+
+        Composite Simpson rule & 9  & 1.83 \\
+        Romberg's method       & 25 & 2.11 \\
+        Gauss-Legendre method  & 10  & 9.83 \\
+
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[tb!]
+    \centering
+    \subimport{figures/}{integration-convergence.pgf}
+    \caption{Integral value with increasing iterations for each of the methods used.}
+    \label{fig:integration_convergence}
+\end{figure}
+
+From the \cref{tab:results_numerical_integration}, the fastest method to reach
+convergence is the Composite Simpson rule, followed by the Romberg's method
+($15.3\%$ slower than Simpson's) and,
+lastly, the Gauss-Legendre ($437.2\%$ slower than Simpson's).

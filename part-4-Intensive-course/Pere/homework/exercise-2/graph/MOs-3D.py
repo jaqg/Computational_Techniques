@@ -127,14 +127,14 @@ for subpl in np.arange(1, nCatoms+1, 1):
         radii = abs(coefs[atom, MO]) * 20
         # Color to represent the phase -> (+) blue; (-) red
         if coefs[atom, MO] < 0:
-            MO_color = 'r'
+            MO_color = '#ed000d7b'
         else:
-            MO_color = 'b'
+            MO_color = '#0082ed6b'
         # Plot the MO's
-        # ax.plot3D(Cxcoord[atom], Cycoord[atom], Czcoord[atom],
-        #           marker='o', ms=radii, c=MO_color, alpha=MO_alpha)
-        plt_MO([Cxcoord[atom], Cycoord[atom], Czcoord[atom]],
-               radii/20, MO_color, MO_alpha)
+        ax.plot3D(Cxcoord[atom], Cycoord[atom], Czcoord[atom],
+                  marker='o', ms=radii, c=MO_color, alpha=MO_alpha)
+        # plt_MO([Cxcoord[atom], Cycoord[atom], Czcoord[atom]],
+        #        radii/20, MO_color, MO_alpha)
         #
         ax.view_init(elev=50., azim=20)
         ax.dist = 10

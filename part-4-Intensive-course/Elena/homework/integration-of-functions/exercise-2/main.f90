@@ -58,6 +58,7 @@ program NumInt_exercise_2
         write(*,*) 'Error main.f90: bad input.&
                   & Options: "screen", "file" or "both".'
     end if
+    write(*,*)
     !
     ! Solve numerically the integral
     !
@@ -69,12 +70,13 @@ program NumInt_exercise_2
     !
     ! --- Romberg method ---
     !
-    call RombergIA(lil,uil,threshold,Rmat,findex,sindex,convR,totiter,uf)
+    call RombergIA(lil,uil,threshold,10,Rmat,findex,sindex,convR,totiter,uf)
     !
     ! --- Print the results ---
     !
     prdl1: do i = 1, 10
-        write(unit=uf, fmt='(*(f13.8))') ( Rmat(i,j), j=1, 10 )
+        ! write(unit=uf, fmt='(*(f13.8))') ( Rmat(i,j), j=1, i )
+        write(unit=uf, fmt='(*(f13.8))') Rmat(i,i)
     end do prdl1 
     write(unit=uf, fmt=*) ''
     !
