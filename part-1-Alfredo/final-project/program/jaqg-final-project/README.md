@@ -65,9 +65,11 @@ $$
 
 The methods are computed for any function $f$ as far as the function has the
 same form as the computed Lotka-Volterra, meaning any function as $f(t,y)$
+
 $$
     \text{Method} \to \text{call method}(f)
 $$
+
 with some other arguments needed for each method.
 
 Either way, the methods can be easily modified for other defined functions just
@@ -87,10 +89,13 @@ starting at 0,0 for formulation/code convinience)
 The function is in the file `subroutines/LV.f90`.
 
 The equations can be written as
+
 $$
     \dfrac{\mathrm{d}y}{\mathrm{d}t} = y' = ay + by^2 + cxy
 $$
+
 where $x$ and $y$ are stored in an array $\mathbb{Y}$ in pairs, as
+
 $$
     \mathbb{Y} =
       \begin{pmatrix}
@@ -100,13 +105,16 @@ $$
       x(t_f) & y(t_f) & \ldots & z(t_f)  \\
     \end{pmatrix}
 $$
+
 so they can be computed as
+
 $$
     \mathbb{Y}_{i+1,j} =
     \mathbb{P}_{1,j} \mathbb{Y}_{i,j} +
     \mathbb{P}_{2,j} \mathbb{Y}_{i,j}^2 +
     \mathbb{P}_{3,j} \mathbb{Y}_{i,j} \mathbb{Y}_{i,j+1}
 $$
+
 as there is not an implicit time-dependence. The matrix $\mathbb{P}$ is an
 array with the parameters $\alpha, \beta, \ldots$ (explained below)
 
@@ -122,35 +130,45 @@ The LV function is coded as `LV(t, yt)`, so it takes as arguments
 The subroutine is in the file `modules/taylor_module.f90`.
 
 Taylor's series expansion of a function $y(t)$ around $t=t_0$, considering $y(t=0) = y_0$, is given by
+
 $$
     y(t) = y_0 + y_0' h + \frac{1}{2} y_0'' h^2 + \frac{1}{6} y_0''' h^3 + \ldots
 $$
+
 with
+
 $$
     h = t - t_0
 $$
 
 So, I computed this as
+
 $$
     y(t_{k+1}) = y_{k+1} = y_k + y_k' h + \frac{1}{2!} y_k'' h^2 + \frac{1}{3!} y_k''' h^3 + \ldots
 $$
+
 with
+
 $$
     h = t_{k+1} - t_k
 $$
+
 The problem is in calculating the derivatives. I compute the successive
 derivatives of $y(t)$ as (for more information read `notes-derivatives-LV.pdf`)
+
 $$
     y^{(n+1)} =
     a y^{(n)} +
     b \sum_{k=0}^{n} \mathbb{C}_{n,k}\, y^{(n-k)} y^{(k)} +
     c \sum_{k=0}^{n} \mathbb{C}_{n,k}\, x^{(n-k)} y^{(k)}
 $$
+
 where $\mathbb{C}$ is a coefficient matrix.
 
 Then, I compute the derivatives with the function `derivatives(n, y, ders)`
 (contained in the `modules/taylor_module.f90` module), which stores the
 evaluated derivatives in an array $\mathbb{D}$ as
+
 $$
     \mathbb{D} =
       \begin{pmatrix}
@@ -160,12 +178,14 @@ $$
       x^{(N)} & y^{(N)} & \ldots & z^{(N)} \\
     \end{pmatrix}
 $$
+
 where $y^{(N)}$ is the $N$-th derivative of $y(t)$ at a time $t$, as $y^{(1)} = \mathrm{d}y^{(0)}(t)/\mathrm{d}t = \mathrm{d}y(t)/\mathrm{d}t$.
 
 The derivatives array $\mathbb{D}$ has dimensions of $N \times n$, for the $N$
 first derivatives and $n$ species.
 
 Then, I compute the Taylor's series in the subroutine `Taylor(y0, t0, tf, h, nterms, t, y)` (contained in the `modules/taylor_module.f90` module) as
+
 $$
     \mathbb{Y}_{i+1,j} =
     \sum_{k=0}^{N-1} \frac{1}{k!} \mathbb{D}_{k,j} h^k \qquad N = \text{\# terms}
@@ -197,14 +217,18 @@ The subroutine is in the file `subroutines/Euler.f90`.
 
 It is the truncation of the Taylor's expansion at first order, and can be
 computed as
+
 $$
     y_{n+1} \approx y_n + h f(t_n, y_n)
 $$
+
 meaning, in my notation
+
 $$
     \mathbb{Y}_{n+1, j} \approx \mathbb{Y}_{n, j} + h * \mathrm{LV}(t_n, \mathbb{Y}_{n, j})
     = \mathbb{Y}_{n, j} + h \mathbb{D}_{1, j}
 $$
+
 Instead of using the `taylor` subroutine with 1 term, I coded it in a separate
 file.
 
@@ -227,14 +251,17 @@ The subroutine is in the file `subroutines/Modified_Euler.f90`.
 
 In this method, the approximation is achieved with the trapezoid method, and
 can be computed as
+
 $$
     y_{k+1} = y_{k+1}^{(n+1)} =
     y_k + \frac{h}{2} \left[ f(t_k, y_k) +
     f \left( t_{k+1}, y_{k+1}^{(n)} \right) \right]
 $$
+
 iterating over $n$ until convergence of $y_{k+1}$.
 
 In my notation
+
 $$
     \mathbb{Y}_{k+1, j}^{(n+1)} \approx
     \mathbb{Y}_{k+1, j} + \frac{h}{2} \left[ \mathrm{LV}\left( t_k, \mathbb{Y}_{k, j} \right) +
@@ -261,39 +288,51 @@ The subroutine is in the file `subroutines/RungeKutta4.f90`.
 
 The fourth-order Runge-Kutta's method is a fourth-order Taylor approximation
 and can be written as
+
 $$
     y_{k+1} =
     y_k + \frac{1}{6} \left[ K_1 + 2K_2 + 2K_3 + K_4 \right]
 $$
+
 with
+
 $$
     K_1 = h f \left( t_k, y_k \right)
 $$
+
 $$
     K_2 = h f \left( t_k + \frac{h}{2}, y_k + \frac{K_1}{2} \right)
 $$
+
 $$
     K_3 = h f \left( t_k + \frac{h}{2}, y_k + \frac{K_2}{2} \right)
 $$
+
 $$
     K_4 = h f \left( t_k + h, y_k + K_3 \right)
 $$
 
 In my notation
+
 $$
     \mathbb{Y}_{k+1, j} =
     \mathbb{Y}_{k, j} + \frac{1}{6} \left[ \mathbb{K}_{1,j} + 2\mathbb{K}_{2,j} + 2\mathbb{K}_{3,j} + \mathbb{K}_{4,j} \right]
 $$
+
 with
+
 $$
     \mathbb{K}_{1,j} = h * \mathrm{LV} \left( t_k, \mathbb{Y}_{k, j} \right)
 $$
+
 $$
     \mathbb{K}_{2,j} = h * \mathrm{LV} \left( t_k + \frac{h}{2}, \mathbb{Y}_{k, j} + \frac{\mathbb{K}_{1,j}}{2} \right)
 $$
+
 $$
     \mathbb{K}_{3,j} = h * \mathrm{LV} \left( t_k + \frac{h}{2}, \mathbb{Y}_{k, j} + \frac{\mathbb{K}_{2,j}}{2} \right)
 $$
+
 $$
     \mathbb{K}_{4,j} = h * \mathrm{LV} \left( t_k + h, \mathbb{Y}_{k, j} + \mathbb{K}_{3,j} \right)
 $$
