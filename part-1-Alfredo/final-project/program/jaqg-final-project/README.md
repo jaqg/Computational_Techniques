@@ -58,6 +58,7 @@ sense of having the possibility of applying them in any case.
 
 In that sense, the Lotka-Volterra equations are computed as a function of time
 and poblations $y$, as
+
 $$
     \text{LV} \to f = f(t,y)
 $$
