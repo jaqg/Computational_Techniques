@@ -108,12 +108,8 @@ $$
 
 so they can be computed as
 
-
 $$
-    \mathbb{Y}_{i+1,j} =
-    \mathbb{P}_{1,j} \mathbb{Y}_{i,j} +
-    \mathbb{P}_{2,j} \mathbb{Y}_{i,j}^2 +
-    \mathbb{P}_{3,j} \mathbb{Y}_{i,j} \mathbb{Y}_{i,j+1}
+    \mathbb{Y}_{i+1,j} = \mathbb{P}_{1,j} \mathbb{Y}_{i,j} + \mathbb{P}_{2,j} \mathbb{Y}_{i,j}^2 + \mathbb{P}_{3,j} \mathbb{Y}_{i,j} \mathbb{Y}_{i,j+1}
 $$
 
 as there is not an implicit time-dependence. The matrix $\mathbb{P}$ is an
