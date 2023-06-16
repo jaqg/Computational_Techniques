@@ -62,6 +62,7 @@ and poblations $y$, as
 $$
     \text{LV} \to f = f(t,y)
 $$
+
 The methods are computed for any function $f$ as far as the function has the
 same form as the computed Lotka-Volterra, meaning any function as $f(t,y)$
 $$
